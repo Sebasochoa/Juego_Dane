@@ -1,0 +1,11 @@
+{
+  "name": "apagon-en-el-aurora",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Escape room educativo de ciencias (estático, sin dependencias).",
+  "scripts": {
+    "test": "node --test",
+    "capturas": "node tools/capturas.js",
+    "e2e": "node tools/e2e.js"
+  }
+}

@@ -1,0 +1,31 @@
+/* Paleta del juego. Ver docs/ARTE.md. Cada color: base, sombra (-s) y luz (-l). */
+:root {
+  --tinta: #1E2440;    --tinta-s: #141931;    --tinta-l: #313A66;
+  --crema: #F6EFE0;    --crema-s: #DCD2BC;    --crema-l: #FFFBF2;
+  --azul: #3D7DD8;     --azul-s: #2A5BA8;     --azul-l: #8DBBF5;
+  --turquesa: #1FA7A0; --turquesa-s: #147A78; --turquesa-l: #7ADBD0;
+  --verde: #4FB06A;    --verde-s: #357E4C;    --verde-l: #9BDDAA;
+  --lima: #A6C83E;     --lima-s: #7C9A27;     --lima-l: #D3E88A;
+  --amarillo: #F4C03E; --amarillo-s: #C99522; --amarillo-l: #FBE08F;
+  --naranja: #EE8A3C;  --naranja-s: #BF6422;  --naranja-l: #F8BC8C;
+  --coral: #E4574F;    --coral-s: #B03A37;    --coral-l: #F4A19A;
+  --violeta: #7A5CC8;  --violeta-s: #563F96;  --violeta-l: #B7A5EC;
+  --rosa: #E279A6;     --rosa-s: #B4517C;     --rosa-l: #F3B1CC;
+  --gris: #9AA3B8;     --gris-s: #6B748C;     --gris-l: #CDD3E0;
+  --madera: #C08A5A;   --madera-s: #946540;   --madera-l: #E0B48A;
+  --metal: #B9C2D3;    --metal-s: #8590A8;    --metal-l: #E3E8F1;
+  --vidrio: #BFE6F2;
+
+  /* Ambiente por sala */
+  --pared-quimica: #1F5C66;  --pared-quimica-s: #184A53;  --pared-quimica-l: #2A7480;  --piso-quimica: #B9C8CE;
+  --pared-biologia: #2C6247; --pared-biologia-s: #234F39; --pared-biologia-l: #3A7C5B; --piso-biologia: #CFC6AD;
+  --pared-fisica: #7B4630;   --pared-fisica-s: #643826;   --pared-fisica-l: #96593E;   --piso-fisica: #A59A90;
+  --pared-control: #2B2A5E;  --pared-control-s: #201F49;  --pared-control-l: #3B3A7A;  --piso-control: #3F4170;
+  --pared-invernadero: #1C2A4A; --pared-invernadero-s: #14203A; --pared-invernadero-l: #2A3C66; --piso-invernadero: #8E7D5E;
+
+  --sombra: rgba(20, 25, 49, .22);
+  --brillo: rgba(255, 255, 255, .35);
+
+  --fuente: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fuente-mono: Consolas, "Courier New", monospace;
+}
