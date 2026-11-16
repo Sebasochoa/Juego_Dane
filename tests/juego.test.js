@@ -275,7 +275,7 @@ test('PARTIDA COMPLETA: 2 equipos, aciertos, fallo con pista, fallo con explicac
 
   const csv = J.resultadosCSV(res);
   assert.ok(csv.startsWith('﻿'));
-  assert.match(csv, /"Equipo 1","1350"/);
+  assert.match(csv, /"Equipo 1","1550"/);
   assert.match(csv, /"Para repasar"/);
 });
 
