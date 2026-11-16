@@ -114,7 +114,7 @@ async function abrir(opciones = {}) {
     },
     /** Clic en el centro del primer elemento que coincide con el selector. */
     async clicEn(selector) {
-      const p = await pagina.evaluar('(function(){var e=document.querySelector(' + JSON.stringify(selector) + ');if(!e)return null;if(e.scrollIntoView)e.scrollIntoView({block:"center"});var r=e.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];})()');
+      const p = await pagina.evaluar('(function(){var e=document.querySelector(' + JSON.stringify(selector) + ');if(!e)return null;if(e.scrollIntoView)e.scrollIntoView({block:"nearest",inline:"nearest"});var r=e.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];})()');
       if (!p) throw new Error('No existe el elemento: ' + selector);
       await pagina.clic(p[0], p[1]);
     },

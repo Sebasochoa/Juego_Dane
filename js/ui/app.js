@@ -17,7 +17,12 @@
   function ir(nombre, params) {
     while (pilaDialogos.length) pilaDialogos.pop().el.remove();
     if (actual && actual.salir) { try { actual.salir(); } catch (e) { /* seguir */ } }
-    cont.innerHTML = '';
+    // Contenedor NUEVO por pantalla: así los manejadores de eventos que registró la
+    // pantalla anterior desaparecen con ella y no se acumulan entre visitas.
+    var nuevo = document.createElement('div');
+    nuevo.id = 'pantalla';
+    cont.replaceWith(nuevo);
+    cont = nuevo;
     cont.className = 'p-' + nombre;
     var p = EA.pantallas[nombre];
     var ctl = p.montar(cont, params || {}) || {};
@@ -44,7 +49,7 @@
     velo.innerHTML = '<div class="dialogo' + (o.ancho ? ' ancho' : '') + '" role="dialog" aria-modal="true" aria-label="' + esc(o.titulo || '') + '">'
       + (o.titulo ? '<h2>' + esc(o.titulo) + '</h2>' : '') + '<div class="dialogo-cuerpo">' + (o.html || '') + '</div>'
       + '<div class="acciones">' + botones.map(function (b, i) {
-        return '<button type="button" class="btn ' + (b.clase || '') + '" data-i="' + i + '">' + esc(b.texto) + (b.tecla ? ' <kbd>' + esc(b.tecla === 'Escape' ? 'Esc' : b.tecla) + '</kbd>' : '') + '</button>';
+        return '<button type="button" class="btn ' + (b.clase || '') + '" data-boton-dialogo="' + i + '">' + esc(b.texto) + (b.tecla ? ' <kbd>' + esc(b.tecla === 'Escape' ? 'Esc' : b.tecla) + '</kbd>' : '') + '</button>';
       }).join('') + '</div></div>';
     var reg = { el: velo, tecla: null, cerrar: cerrar };
     function cerrar() {
@@ -61,8 +66,8 @@
       if (b.accion) b.accion(reg);
     }
     velo.addEventListener('click', function (e) {
-      var btn = e.target.closest('button[data-i]');
-      if (btn) pulsar(+btn.getAttribute('data-i'));
+      var btn = e.target.closest('.acciones > button[data-boton-dialogo]');
+      if (btn) pulsar(+btn.getAttribute('data-boton-dialogo'));
     });
     reg.tecla = function (e) {
       if (e.key === 'Tab') {

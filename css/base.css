@@ -142,3 +142,6 @@ input[type="checkbox"], input[type="radio"] { width: 32px; height: 32px; accent-
 .dialogo { display: flex; flex-direction: column; overflow: hidden; }
 .dialogo > h2, .dialogo > .acciones { flex: none; }
 .dialogo-cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: var(--gris-s) transparent; }
+
+/* El lienzo nunca se desplaza, ni siquiera por foco o scroll programático. */
+@supports (overflow: clip) { #marco, #escenario { overflow: clip; } }

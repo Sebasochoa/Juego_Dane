@@ -30,6 +30,10 @@
     TEMPORIZADOR_PASO: 15,
     TEMPORIZADOR_DEFECTO: 90,
 
+    // Pausas para ver las animaciones antes del cambio de turno (milisegundos)
+    ESPERA_CANDADO_MS: 1500,
+    ESPERA_PUERTA_MS: 3200,
+
     // Resumen
     REPASO_MAX: 5,
 

@@ -364,14 +364,14 @@
         ui.pregunta = q; ui.elegida = null; ui.enResultado = null;
         callar(); robot('pensando');
         capa.hidden = false; fondo();
-        capa.innerHTML = '<div class="tarjeta" role="dialog" aria-modal="true" aria-label="Pregunta del candado ' + (i + 1) + '">'
+        capa.innerHTML = '<div class="tarjeta" tabindex="-1" role="dialog" aria-modal="true" aria-label="Pregunta del candado ' + (i + 1) + '">'
           + cabeceraTarjeta(q) + htmlEnunciado(q)
           + (q.pista ? '<div class="caja-pista">' + A.icono('bombilla', 38) + '<div><b>Pista</b>' + F(q.pista) + '</div></div>' : '')
           + htmlOpciones(q, null)
           + '<div class="tarjeta-pie"><span class="teclas">Elijan con <kbd>A</kbd>–<kbd>' + LETRAS[q.alternativas.length - 1] + '</kbd> o <kbd>1</kbd>–<kbd>' + q.alternativas.length + '</kbd> y confirmen con <kbd>Enter</kbd></span>'
           + '<button type="button" class="btn" id="b-confirmar" disabled>Confirmar respuesta <kbd>Enter</kbd></button></div></div>';
-        var p = capa.querySelector('.opcion');
-        if (p) p.focus({ preventScroll: true });
+        // El foco va a la tarjeta, no a una alternativa: así Enter no elige nada por accidente.
+        var p = capa.querySelector('.tarjeta'); if (p) p.focus({ preventScroll: true });
         EA.ui.anunciar('Pregunta: ' + U.plano(q.enunciado));
       }
 
@@ -438,10 +438,10 @@
         if (res.simple) { finTurno(); return; }
         ui.bloqueo = true;
         pintarInteractivos({ recien: res.candado, puertaAbriendo: res.salaCompletada });
-        var espera = 1500;
+        var espera = CFG.ESPERA_CANDADO_MS;
         if (res.abierto) {
           EA.audio.fx('candado');
-          if (res.salaCompletada) { EA.audio.fx(res.escapo ? 'victoria' : 'puerta'); espera = 3200; }
+          if (res.salaCompletada) { EA.audio.fx(res.escapo ? 'victoria' : 'puerta'); espera = CFG.ESPERA_PUERTA_MS; }
           decir(res.escapo ? '¡Lo lograron! <b>' + esc(eq().nombre) + '</b> escapó del instituto.' : res.salaCompletada ? '¡Sala completada! La puerta se abre…' : 'Candado abierto.', res.correcto || res.salaCompletada ? 'contento' : 'neutral');
         } else {
           decir('El candado sigue cerrado. Recuerden la pista para la próxima.', 'neutral');

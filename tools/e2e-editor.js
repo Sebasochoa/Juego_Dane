@@ -117,6 +117,64 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'editor-' + n +
     await pag.clicEn('.dialogo .acciones button:last-child'); await pausa(150);
     assert.equal((await nombres())[0], 'Ejemplo: Ciencias básicas');
 
+    // ---- Editar a fondo un preset existente: cada acción responde al primer clic
+    const velos = () => ev('document.querySelectorAll("#capa-modal .velo").length');
+    const cambiar = (sel, v) => ev('(function(){var s=document.querySelector(' + JSON.stringify(sel) + ');s.value=' + JSON.stringify(v) + ';s.dispatchEvent(new Event("change",{bubbles:true}))})()');
+    await pag.clicEn('.ed-preset:first-child [data-a="editar"]'); await pausa(150);
+    assert.equal(await ev('document.querySelector(".pagina-cab h2").textContent'), 'Editar preset');
+    await pag.clicEn('#p-nombre'); await seleccionar('#p-nombre'); await pag.escribir('Ejemplo editado');
+    await cambiar('#p-grado', '2');
+    // Reordenar: la sala 1 baja un lugar
+    await pag.clicEn('[data-a="sala-abajo"][data-i="0"]'); await pausa(120);
+    assert.deepEqual(await ev('Array.from(document.querySelectorAll(".ed-sala-btn span")).map(function(s){return s.firstChild.textContent})'), ['Laboratorio de Biología', 'Laboratorio de Química', 'Sala de Control']);
+    assert.equal(await ev('document.querySelector(".ed-sala.sel b").textContent'), '2', 'la sala movida sigue seleccionada');
+    // Cambiar el escenario de la sala 3 (de 4 a 3 candados): conserva sus preguntas
+    await pag.clicEn('[data-a="sel-sala"][data-i="2"]'); await pausa(120);
+    await cambiar('#s-escena', 'fisica'); await pausa(120);
+    assert.equal(await ev('document.querySelectorAll(".ed-q").length'), 5);
+    assert.match(await ev('document.querySelector(".ed-sala.sel small").textContent'), /5 de 3/);
+    // Editar una pregunta: agregar una 5.ª alternativa y quitar la 2.ª
+    await pag.clicEn('[data-a="q-editar"][data-i="0"]'); await pausa(150);
+    assert.equal(await velos(), 1);
+    await pag.clicEn('[data-q="alt-agregar"]'); await pausa(100);
+    assert.equal(await ev('document.querySelectorAll("[data-alt]").length'), 5);
+    assert.equal(await ev('document.querySelector(\'[data-q="alt-agregar"]\').disabled'), true, 'máximo 5 alternativas');
+    await pag.clicEn('[data-alt="4"]'); await pag.escribir('Quinta opción');
+    await pag.clicEn('[data-q="alt-quitar"][data-i="1"]'); await pausa(100);
+    assert.equal(await ev('document.querySelectorAll("[data-alt]").length'), 4);
+    assert.equal(await ev('document.querySelector(\'input[name="q-correcta"]:checked\').value'), '0', 'la correcta se conserva al quitar otra');
+    assert.equal(await ev('document.querySelector(\'[data-alt="3"]\').value'), 'Quinta opción');
+    // Quitar la correcta obliga a marcar otra
+    await pag.clicEn('[data-q="alt-quitar"][data-i="0"]'); await pausa(100);
+    await pag.clicEn(GUARDAR_Q); await pausa(120);
+    assert.match(await ev('document.querySelector("#q-errores").textContent'), /exactamente una alternativa correcta/);
+    assert.equal(await velos(), 1, 'con errores el diálogo sigue abierto');
+    await pag.clicEn('input[name="q-correcta"][value="2"]');
+    await pag.clicEn(GUARDAR_Q); await pausa(150);
+    assert.equal(await velos(), 0, 'guardar la pregunta cierra al primer clic');
+    // Quitar una sala con preguntas pide confirmación (una sola)
+    await pag.clicEn('[data-a="sala-quitar"][data-i="1"]'); await pausa(120);
+    assert.equal(await velos(), 1);
+    await pag.tecla('Escape'); await pausa(100);
+    assert.equal(await ev('document.querySelectorAll(".ed-sala").length'), 3, 'cancelar conserva la sala');
+    // Nombre repetido: no guarda y lo explica
+    await pag.clicEn('#p-nombre'); await seleccionar('#p-nombre'); await pag.escribir('plantilla vacía');
+    await pag.clicEn('[data-a="guardar"]'); await pausa(120);
+    assert.match(await ev('document.querySelector("#e-aviso").textContent'), /Ya existe otro preset/);
+    assert.equal(await ev('document.querySelector(".pagina-cab h2").textContent'), 'Editar preset');
+    await pag.clicEn('#p-nombre'); await seleccionar('#p-nombre'); await pag.escribir('Ejemplo editado');
+    await pag.clicEn('[data-a="guardar"]'); await pausa(200);
+    assert.equal(await velos(), 0, 'un preset válido se guarda sin avisos');
+    assert.equal(await ev('document.querySelector(".pagina-cab h2").textContent'), 'Editor de presets', 'guardar vuelve a la lista al primer clic');
+    const editado = JSON.parse(await ev('JSON.stringify(JSON.parse(localStorage.getItem("apagon-aurora.presets.v1"))[0])'));
+    assert.equal(editado.nombre, 'Ejemplo editado');
+    assert.equal(editado.grado, '2');
+    assert.deepEqual(editado.salas.map((x) => x.escena), ['biologia', 'quimica', 'fisica']);
+    assert.equal(editado.salas[2].preguntas[0].alternativas.length, 3);
+    assert.equal(editado.salas[2].preguntas[0].alternativas[2], 'Quinta opción');
+    assert.equal(editado.salas[2].preguntas[0].correcta, 2);
+    assert.deepEqual(await ev('EA.presets.validarPreset(EA.editor.presets()[0]).errores'), []);
+
     // Los cambios sobreviven a recargar la página y el preset incompleto no aparece al jugar
     await pag.ir(urlJuego(''));
     await pag.clicEn('[data-ir="configurar"]'); await pausa(200);

@@ -162,7 +162,15 @@ node tools/e2e-editor.js
 ```
 
 ```bash
+node tools/e2e-navegacion.js
+```
+
+```bash
 node tools/e2e-extras.js
+```
+
+```bash
+node tools/e2e-completo.js
 ```
 
 ```bash
@@ -172,6 +180,10 @@ node tools/capturas.js
 - `e2e.js`: partida completa con 2 equipos usando clics y teclado reales (aciertos, fallo con pista,
   fallo con explicación, escape de ambos, resumen).
 - `e2e-editor.js`: crear, validar, vista previa, guardar, duplicar, exportar, importar con conflicto, eliminar y restaurar.
+- `e2e-navegacion.js`: entra y sale varias veces de cada pantalla y comprueba que cada clic actúa una sola vez
+  (un diálogo por acción, «Cancelar» y «Guardar» responden al primer clic, las partidas nuevas no heredan nada de la anterior).
+- `e2e-completo.js`: partida de 90 turnos con las 5 salas y 3 equipos (uno acierta siempre, otro usa las pistas, otro llega a la
+  explicación); en cada turno compara la pantalla con el estado y verifica que el texto de los presets nunca se interprete como HTML. Tarda unos 3 minutos.
 - `e2e-extras.js`: temporizador, 4 equipos, resoluciones 1366×768 y 4:3, reemplazo de arte, zonas de clic y movimiento reducido.
 - `capturas.js`: renderiza cada escena a PNG en `capturas/` para revisarlas a ojo.
 
