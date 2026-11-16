@@ -52,7 +52,7 @@
         revela: 3,
         alUsar: '¡Se ven las células! El monitor reconoció la muestra y activó su candado.',
         pistas: [
-          'Hay dos objetos para recoger: uno está en el mesón, cerca del microscopio, y el otro en el estante.',
+          'Hay dos objetos para recoger: uno está en el mesón, junto al monitor, y el otro sobre el gabinete de muestras.',
           'Las células de cebolla son casi transparentes. ¿Qué se usa para darles contraste? Combinen el portaobjetos con el gotero.',
           'La muestra ya está teñida. Selecciónenla y úsenla en el microscopio.'
         ]
