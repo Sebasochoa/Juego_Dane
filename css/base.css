@@ -1,0 +1,139 @@
+/* Base: lienzo lógico 1920×1080 escalado, tipografía, botones, formularios y diálogos. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: #0C1022;
+  color: var(--crema-l);
+  font-family: var(--fuente);
+  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+#marco { position: fixed; inset: 0; overflow: hidden; }
+#escenario {
+  position: absolute; left: 50%; top: 50%;
+  width: 1920px; height: 1080px;
+  transform-origin: 0 0;
+  background: var(--tinta);
+  overflow: hidden;
+  font-size: 26px; line-height: 1.35;
+  outline: none;
+  user-select: none; -webkit-user-select: none;
+}
+#pantalla { position: absolute; inset: 0; }
+.solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 84px; font-weight: 800; line-height: 1.05; letter-spacing: -1px; }
+h2 { font-size: 48px; font-weight: 800; line-height: 1.15; }
+h3 { font-size: 32px; font-weight: 800; }
+sub, sup { font-size: .68em; line-height: 0; }
+.icono { flex: none; }
+
+/* ---------- Botones ---------- */
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 14px;
+  min-height: 72px; padding: 12px 34px;
+  border: 0; border-radius: 18px;
+  background: var(--amarillo); color: var(--tinta-s);
+  font-size: 30px; font-weight: 800;
+  box-shadow: 0 7px 0 var(--amarillo-s);
+  transition: transform .08s, box-shadow .08s, background-color .15s;
+}
+.btn:hover { background: var(--amarillo-l); }
+.btn:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--amarillo-s); }
+.btn[disabled] { background: var(--gris-s); color: var(--tinta); box-shadow: 0 7px 0 #4d556b; cursor: not-allowed; }
+.btn.sec { background: var(--tinta-l); color: var(--crema-l); box-shadow: 0 7px 0 var(--tinta-s); }
+.btn.sec:hover { background: #3d4779; }
+.btn.sec:active { box-shadow: 0 2px 0 var(--tinta-s); }
+.btn.peligro { background: var(--coral); color: #fff; box-shadow: 0 7px 0 var(--coral-s); }
+.btn.peligro { color: var(--tinta-s); }
+.btn.chico { min-height: 56px; padding: 8px 22px; font-size: 24px; border-radius: 14px; box-shadow: 0 5px 0 var(--amarillo-s); }
+.btn.chico.sec { box-shadow: 0 5px 0 var(--tinta-s); }
+.btn.chico.peligro { box-shadow: 0 5px 0 var(--coral-s); }
+.btn kbd { font: 700 20px var(--fuente-mono); padding: 2px 10px; border-radius: 8px; background: rgba(20, 25, 49, .16); }
+.btn.sec kbd { background: rgba(255, 255, 255, .14); }
+
+.btn-icono {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 60px; height: 60px; padding: 0; flex: none;
+  border: 0; border-radius: 16px;
+  background: var(--tinta-l); color: var(--crema-l);
+  transition: background-color .15s;
+}
+.btn-icono:hover { background: #3d4779; }
+.btn-icono[aria-pressed="true"] { background: var(--coral-s); }
+
+:focus { outline: none; }
+:focus-visible { outline: 5px solid var(--amarillo-l); outline-offset: 4px; }
+
+/* ---------- Formularios ---------- */
+label { font-weight: 700; }
+input[type="text"], input[type="number"], select, textarea {
+  width: 100%; min-height: 60px; padding: 10px 18px;
+  border: 3px solid var(--tinta-l); border-radius: 14px;
+  background: var(--tinta-s); color: var(--crema-l);
+  font-size: 26px;
+  user-select: text; -webkit-user-select: text;
+}
+textarea { resize: none; line-height: 1.3; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--amarillo); outline-offset: 1px; }
+input[type="range"] { accent-color: var(--amarillo); height: 28px; }
+input[type="checkbox"], input[type="radio"] { width: 32px; height: 32px; accent-color: var(--amarillo); flex: none; }
+::placeholder { color: var(--gris); opacity: 1; }
+
+/* ---------- Utilidades persistentes (sonido y pantalla completa) ---------- */
+#utilidades {
+  position: absolute; top: 12px; right: 16px; z-index: 40;
+  display: flex; align-items: center; gap: 10px;
+}
+#utilidades input[type="range"] { width: 110px; }
+
+/* ---------- Diálogos ---------- */
+#capa-modal { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
+.velo {
+  position: absolute; inset: 0; pointer-events: auto;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(12, 16, 34, .78);
+  animation: aparecer .18s ease-out;
+}
+.dialogo {
+  width: 900px; max-height: 940px; overflow: auto;
+  padding: 40px 46px; border-radius: 28px;
+  background: var(--tinta); border: 4px solid var(--tinta-l);
+  box-shadow: 0 24px 0 rgba(12, 16, 34, .45);
+  animation: subir .22s ease-out;
+}
+.dialogo.ancho { width: 1280px; }
+.dialogo h2 { margin-bottom: 18px; }
+.dialogo p { margin-bottom: 14px; font-size: 28px; }
+.dialogo .acciones { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-end; margin-top: 30px; }
+.dialogo ul { margin: 0 0 14px; padding-left: 34px; font-size: 26px; }
+
+@keyframes aparecer { from { opacity: 0; } }
+@keyframes subir { from { opacity: 0; transform: translateY(24px); } }
+
+/* ---------- Piezas comunes ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 6px 16px; border-radius: 999px;
+  background: var(--tinta-l); font-size: 22px; font-weight: 700;
+}
+.simbolo-eq {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 46px; height: 46px; border-radius: 12px; flex: none;
+  background: var(--eq, var(--gris)); color: var(--tinta-s);
+}
+.aviso {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 16px 22px; border-radius: 16px;
+  background: rgba(244, 192, 62, .14); border: 3px solid var(--amarillo-s);
+  font-size: 24px;
+}
+.aviso .icono { color: var(--amarillo); margin-top: 2px; }
+.error-texto { color: var(--coral-l); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
+}
