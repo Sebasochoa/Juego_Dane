@@ -126,6 +126,7 @@ async function abrir(opciones = {}) {
       await s('Input.dispatchKeyEvent', Object.assign({ type: txt ? 'keyDown' : 'rawKeyDown', text: txt }, base));
       await s('Input.dispatchKeyEvent', Object.assign({ type: 'keyUp' }, base));
     },
+    async movimientoReducido(activo) { await s('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: activo ? 'reduce' : '' }] }); },
     /** Escribe texto en el campo enfocado. */
     async escribir(texto) { await s('Input.insertText', { text: texto }); },
     async cerrar() {

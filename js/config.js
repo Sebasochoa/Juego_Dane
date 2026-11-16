@@ -39,13 +39,13 @@
     // Equipos: color (variable de la paleta) + símbolo, para no depender solo del color
     COLORES_EQUIPO: [
       { id: 'coral', nombre: 'Coral', hex: '#E4574F' },
-      { id: 'azul', nombre: 'Azul', hex: '#3D7DD8' },
+      { id: 'azul', nombre: 'Azul', hex: '#5F9BEA' },
       { id: 'verde', nombre: 'Verde', hex: '#4FB06A' },
       { id: 'amarillo', nombre: 'Amarillo', hex: '#F4C03E' },
       { id: 'violeta', nombre: 'Violeta', hex: '#9A7FE0' },
       { id: 'naranja', nombre: 'Naranja', hex: '#EE8A3C' }
     ],
     SIMBOLOS_EQUIPO: ['triangulo', 'circulo', 'cuadrado', 'rombo'],
-    NOMBRES_EQUIPO: ['Equipo Protón', 'Equipo Neutrón', 'Equipo Electrón', 'Equipo Fotón']
+    NOMBRES_EQUIPO: ['Protones', 'Neutrones', 'Electrones', 'Fotones']
   };
 })(typeof window !== 'undefined' ? (window.EA = window.EA || {}) : (globalThis.EA = globalThis.EA || {}));

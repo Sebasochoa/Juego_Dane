@@ -75,7 +75,7 @@
     },
     examinar: {
       adn: { caja: [740, 200, 153, 221], arte: function () { return u('deco.adn', 740, 200, 0.85); } },
-      cartelTincion: { caja: [920, 250, 105, 84], arte: function () { return u('deco.nota', 920, 250, 0.7); } },
+      cartelTincion: { caja: [914, 244, 120, 96], arte: function () { return u('deco.nota', 914, 244, 0.8); } },
       microscopio: { caja: [836, 362, 170, 220], arte: function () { return u('lab.microscopio', 836, 362); } }
     },
     dinamicos: function (v) { return u('bio.monitor', 1020, 362, 1, { encendido: v.usado }); },
