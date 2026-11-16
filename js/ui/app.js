@@ -93,6 +93,25 @@
     return reg;
   }
 
+  /** Capa modal con contenido propio (p. ej. vista previa). Se cierra con Esc o con el botón indicado. */
+  function dialogoLibre(velo, selectorCerrar) {
+    var previo = document.activeElement;
+    var reg = { el: velo, cerrar: cerrar, tecla: function (e) { if (e.key === 'Escape') { e.preventDefault(); cerrar(); } else if (e.key === 'Tab') { e.preventDefault(); velo.querySelector(selectorCerrar).focus(); } return true; } };
+    function cerrar() {
+      var i = pilaDialogos.indexOf(reg);
+      if (i < 0) return;
+      pilaDialogos.splice(i, 1);
+      velo.remove();
+      if (previo && document.contains(previo)) previo.focus({ preventScroll: true });
+    }
+    capaModal.appendChild(velo);
+    pilaDialogos.push(reg);
+    var b = velo.querySelector(selectorCerrar);
+    b.addEventListener('click', cerrar);
+    b.focus({ preventScroll: true });
+    return reg;
+  }
+
   function enCampo(e) {
     var t = e.target;
     return !!t && (t.tagName === 'INPUT' && t.type !== 'checkbox' && t.type !== 'radio' && t.type !== 'range' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
@@ -196,7 +215,7 @@
   }
 
   EA.ui = {
-    ir: ir, dialogo: dialogo, anunciar: anunciar, enCampo: enCampo, arrancar: arrancar,
+    ir: ir, dialogo: dialogo, dialogoLibre: dialogoLibre, anunciar: anunciar, enCampo: enCampo, arrancar: arrancar,
     escala: function () { return escala; },
     hayDialogo: function () { return pilaDialogos.length > 0; },
     simbolo: function (eq, tam) {

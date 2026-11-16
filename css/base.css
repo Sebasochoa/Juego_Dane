@@ -137,3 +137,8 @@ input[type="checkbox"], input[type="radio"] { width: 32px; height: 32px; accent-
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
 }
+
+/* El pie del diálogo siempre queda visible; solo el cuerpo se desplaza. */
+.dialogo { display: flex; flex-direction: column; overflow: hidden; }
+.dialogo > h2, .dialogo > .acciones { flex: none; }
+.dialogo-cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: var(--gris-s) transparent; }
