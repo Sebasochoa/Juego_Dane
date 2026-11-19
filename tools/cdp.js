@@ -119,7 +119,7 @@ async function abrir(opciones = {}) {
       await pagina.clic(p[0], p[1]);
     },
     async tecla(key) {
-      const especiales = { Enter: [13, '\r'], Escape: [27], Tab: [9], ' ': [32, ' '] };
+      const especiales = { Enter: [13, '\r'], Escape: [27], Tab: [9], ' ': [32, ' '], ArrowLeft: [37], ArrowUp: [38], ArrowRight: [39], ArrowDown: [40] };
       const e = especiales[key];
       const base = { key, windowsVirtualKeyCode: e ? e[0] : key.toUpperCase().charCodeAt(0), code: e ? key : 'Key' + key.toUpperCase() };
       const txt = e ? e[1] : key;

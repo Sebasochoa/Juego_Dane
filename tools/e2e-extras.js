@@ -37,7 +37,7 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'extra-' + n + 
     assert.equal(await ev('document.querySelector("#eq-mas").disabled'), true, 'máximo 4 equipos');
     await pag.clicEn('#t-activo'); await pausa(80);
     for (let i = 0; i < 6; i++) await pag.clicEn('#t-menos');
-    assert.equal(await ev('document.querySelector("#t-seg").textContent'), '0:30 min');
+    assert.equal(await ev('document.querySelector("#t-valor").textContent'), '0:30 min');
     assert.equal(await ev('document.querySelector("#t-menos").disabled'), true, 'mínimo 30 s');
     const colores = await ev('Array.from(document.querySelectorAll(".equipo-fila .simbolo-eq")).map(function(e){return e.style.getPropertyValue("--eq")})');
     assert.equal(new Set(colores).size, 4, 'cada equipo tiene un color distinto');
@@ -46,6 +46,7 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'extra-' + n + 
     // Acelera el reloj 8x para no esperar 30 s reales
     await ev('(function(){var n=performance.now.bind(performance);performance.now=function(){return n()*8}})()');
     await pag.clicEn('#comenzar'); await pausa(300);
+    await pag.tecla('Escape'); await pausa(250); // salta la historia
     assert.equal(await ev('EA.partida.opciones.temporizador'), 30);
     assert.equal(await ev('document.querySelectorAll(".hud-eq").length'), 4);
     await foto(pag, '03-hud-4-equipos');

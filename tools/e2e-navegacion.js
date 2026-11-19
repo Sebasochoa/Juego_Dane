@@ -88,7 +88,7 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'nav-' + n + '.
     await clic(BTN(2));
     assert.equal(await dialogos(), 0);
     assert.equal(await ev('document.querySelector(".pagina-cab h2").textContent'), 'Editor de presets', 'salió al primer clic');
-    assert.equal(await ev('EA.editor.presets().length'), 2, 'descartar no guardó nada');
+    assert.equal(await ev('EA.editor.presets().length'), 3, 'descartar no guardó nada');
 
     // Sin cambios, salir de la edición no pregunta nada
     await clic('.ed-preset:first-child [data-a="editar"]');
@@ -98,11 +98,11 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'nav-' + n + '.
 
     // Duplicar preset: exactamente uno más por clic
     await clic('.ed-preset:first-child [data-a="duplicar"]');
-    assert.equal(await ev('EA.editor.presets().length'), 3, 'duplicar crea una sola copia');
+    assert.equal(await ev('EA.editor.presets().length'), 4, 'duplicar crea una sola copia');
     await clic('.ed-preset:last-child [data-a="eliminar"]');
     assert.equal(await dialogos(), 1);
     await clic(BTN(2));
-    assert.equal(await ev('EA.editor.presets().length'), 2);
+    assert.equal(await ev('EA.editor.presets().length'), 3);
     assert.equal(await dialogos(), 0);
 
     // Esc sale del editor al menú de una vez
@@ -116,7 +116,7 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'nav-' + n + '.
     await clic('#eq-menos');
     assert.equal(await ev('document.querySelectorAll(".equipo-fila").length'), 2);
     await clic('#t-activo'); await clic('#t-mas');
-    assert.equal(await ev('document.querySelector("#t-seg").textContent'), '1:45 min', 'el tiempo sube un paso por clic');
+    assert.equal(await ev('document.querySelector("#t-valor").textContent'), '1:45 min', 'el tiempo sube un paso por clic');
     await clic('#t-activo');
 
     // ---- Partida, resumen, «Jugar de nuevo» y otra partida desde el menú: sin manejadores viejos
@@ -141,7 +141,19 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'nav-' + n + '.
       await clic(BTN(2));
       assert.equal(await pantalla(), 'p-resumen');
     };
-    await clic('#comenzar', 300);
+    // Selector de modo: ida y vuelta sin perder los equipos
+    await clic('.modo-op:nth-child(2)');
+    assert.equal(await ev('document.querySelectorAll(".equipo-fila").length'), 1, 'un solo equipo');
+    assert.equal(await ev('document.querySelector("#eq-paso").hidden'), true);
+    await clic('#t-mas');
+    assert.equal(await ev('document.querySelector("#t-valor").textContent'), '25 min', 'el tiempo límite sube de a 5 minutos');
+    await clic('.modo-op:nth-child(1)');
+    assert.equal(await ev('document.querySelectorAll(".equipo-fila").length'), 2, 'vuelven los dos equipos');
+    await clic('#comenzar', 400);
+    // La historia: Esc la salta de una vez
+    assert.equal(await ev('document.querySelector("#pantalla").className'), 'p-historia');
+    await pag.tecla('Escape'); await pausa(250);
+    assert.equal(await ev('document.querySelector("#pantalla").className'), 'p-juego');
     await jugarYTerminar(1);
     await clic('#r-otra', 300);
     await jugarYTerminar(2);
@@ -150,7 +162,9 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'nav-' + n + '.
     await clic('#r-menu');
     assert.equal(await pantalla(), 'p-menu');
     await clic('[data-ir="configurar"]');
-    await clic('#comenzar', 300);
+    assert.equal(await ev('document.querySelector(\'input[name="modo"]:checked\').value'), 'turnos', 'el modo elegido se recuerda');
+    await clic('#comenzar', 400);
+    await clic('#hist-saltar', 250);
     await jugarYTerminar(4);
     await foto(pag, '01-final');
 

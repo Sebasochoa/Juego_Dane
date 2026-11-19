@@ -22,16 +22,33 @@ const foto = (pag, n) => pag.captura(path.join(dir, 'e2e-' + n + '.png'));
     await pag.ir(urlJuego(''));
     await ev('localStorage.clear()');
     await pag.ir(urlJuego(''));
-    assert.equal(await ev('document.querySelector("h1").textContent'), 'Apagón en el Aurora');
+    assert.equal(await ev('document.querySelector("h1").textContent'), 'El laboratorio del científico');
 
     // Menú -> Configuración
     await pag.clicEn('[data-ir="configurar"]');
     await pausa(200);
-    assert.equal(await ev('document.querySelectorAll(".preset-op").length'), 1, 'solo el preset jugable aparece');
+    assert.equal(await ev('document.querySelectorAll(".preset-op").length'), 2, 'solo los presets jugables aparecen (no la plantilla)');
+    assert.equal(await ev('document.querySelector(".preset-op input:checked").value'), 'ejemplo-anhidridos', 'el preset del docente viene elegido');
+    assert.equal(await ev('document.querySelector(\'input[name="modo"]:checked\').value'), 'turnos', 'por turnos es el modo por defecto');
     assert.equal(await ev('document.querySelectorAll(".equipo-fila").length'), 2);
+    await pag.clicEn('.preset-op input[value="ejemplo-ciencias-basicas"]');
     await foto(pag, '01-configuracion');
     await pag.clicEn('#comenzar');
-    await pausa(300);
+    await pausa(400);
+
+    // Historia de inicio: 4 paneles; el plano muestra las salas del preset elegido
+    assert.equal(await ev('document.querySelector("#pantalla").className'), 'p-historia');
+    const titulos = [];
+    for (let i = 0; i < 4; i++) {
+      titulos.push(await ev('document.querySelector("#hist-titulo").textContent'));
+      if (i === 3) {
+        assert.match(await ev('document.querySelector("#hist-txt").textContent'), /3 salas: Laboratorio de Química, Laboratorio de Biología y Sala de Control/);
+        await foto(pag, '01b-historia-mision');
+      }
+      if (i === 1) { await pag.tecla('ArrowLeft'); await pausa(300); assert.equal(await ev('document.querySelector("#hist-titulo").textContent'), titulos[0], '← vuelve al panel anterior'); await pag.tecla('ArrowRight'); await pausa(300); }
+      await pag.clicEn('#hist-sig'); await pausa(350);
+    }
+    assert.deepEqual(titulos, ['Una puerta entreabierta', '¡Apagón!', 'Volti despierta', 'La misión']);
 
     // --- utilidades de juego ---
     const estado = () => ev('JSON.stringify({fase:EA.partida.fase,turno:EA.partida.turno,eq:EA.partida.equipos.map(function(e){return {p:e.puntaje,s:e.salaIdx,esc:e.escapo,st:e.stats}})})').then(JSON.parse);
@@ -144,6 +161,15 @@ const foto = (pag, n) => pag.captura(path.join(dir, 'e2e-' + n + '.png'));
     assert.equal(e.eq[0].p, 12 * 100 + 3 * 50 + 200);
     assert.equal(e.eq[1].p, 10 * 100 + 50 + 3 * 50);
 
+    // Final de la historia: nombra al primer equipo en escapar
+    assert.equal(await ev('document.querySelector("#pantalla").className'), 'p-historia');
+    assert.equal(await ev('document.querySelector("#hist-titulo").textContent'), '¡Libres!');
+    assert.match(await ev('document.querySelector("#hist-txt").textContent'), /Protones fue el primer equipo en escapar y, al final, todos lograron salir/);
+    await foto(pag, '13b-final');
+    await pag.tecla('Enter'); await pausa(350);
+    assert.match(await ev('document.querySelector("#hist-txt").textContent'), /Dr\. Ámbar/);
+    await pag.tecla('Enter'); await pausa(400);
+
     // Resumen
     assert.match(await ev('document.querySelector(".pagina-cab h2").textContent'), /Ganó/);
     assert.equal(await ev('document.querySelectorAll(".tabla tbody tr").length'), 2);
@@ -152,8 +178,9 @@ const foto = (pag, n) => pag.captura(path.join(dir, 'e2e-' + n + '.png'));
     const csv = await ev('EA.juego.resultadosCSV(EA.juego.resumen(EA.partida))');
     assert.match(csv, /"1550"/);
 
-    // Jugar de nuevo y terminar por el docente
+    // Jugar de nuevo (sin repetir la introducción) y terminar por el docente (sin final de historia)
     await pag.clicEn('#r-otra'); await pausa(300);
+    assert.equal(await ev('document.querySelector("#pantalla").className'), 'p-juego', 'Jugar de nuevo va directo a la partida');
     assert.equal((await estado()).fase, 'cambio');
     await pag.tecla('Enter'); await pausa(150);
     await pag.tecla('p'); await pausa(120);

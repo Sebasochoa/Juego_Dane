@@ -19,15 +19,35 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'editor-' + n +
   const GUARDAR_Q = '.dialogo .acciones button:last-child';
   try {
     await pag.ir(urlJuego(''));
+    // ---- Navegador con datos de la versión anterior: recibe el preset nuevo y queda elegido
+    await ev('localStorage.clear()');
+    await ev('(function(){var ej=EA.PRESETS_EJEMPLO.filter(function(p){return p.id!=="ejemplo-anhidridos"}).map(EA.presets.normalizarPreset);'
+      + 'var copia=EA.presets.normalizarPreset({id:"p-mwkv8rqh-1b8iw6",nombre:"Anhídridos u óxidos ácidos",grado:"3",salas:[{escena:"quimica",preguntas:[]},{escena:"biologia",preguntas:[]}]});'
+      + 'localStorage.setItem("apagon-aurora.presets.v1",JSON.stringify(ej.concat([copia])));'
+      + 'localStorage.setItem("apagon-aurora.prefs.v1",JSON.stringify({preset:"ejemplo-ciencias-basicas",modo:"turnos"}));})()');
+    await pag.ir(urlJuego(''));
+    const migrado = JSON.parse(await ev('localStorage.getItem("apagon-aurora.presets.v1")'));
+    assert.deepEqual(migrado.map((p) => p.id), ['ejemplo-ciencias-basicas', 'plantilla-vacia', 'ejemplo-anhidridos'], 'la copia del docente se reemplazó por la versión pulida');
+    assert.equal(migrado[2].salas[0].preguntas.length, 7);
+    assert.equal(JSON.parse(await ev('localStorage.getItem("apagon-aurora.prefs.v1")')).preset, 'ejemplo-anhidridos');
+    await pag.clicEn('[data-ir="configurar"]'); await pausa(200);
+    assert.equal(await ev('document.querySelector(".preset-op input:checked").value'), 'ejemplo-anhidridos', 'queda elegido por defecto');
+    await pag.ir(urlJuego(''));
+    assert.equal(JSON.parse(await ev('localStorage.getItem("apagon-aurora.presets.v1")')).length, 3, 'la migración ocurre una sola vez');
+
+    // ---- Primera visita
     await ev('localStorage.clear()');
     await pag.ir(urlJuego(''));
     await pag.clicEn('[data-ir="editor"]'); await pausa(200);
-    assert.equal(await ev('document.querySelectorAll(".ed-preset").length'), 2, 'ejemplo + plantilla');
+    assert.equal(await ev('document.querySelectorAll(".ed-preset").length'), 3, 'anhídridos + ejemplo + plantilla');
+    assert.equal(await ev('document.querySelector(".ed-preset").getAttribute("data-id")'), 'ejemplo-anhidridos', 'el predeterminado va primero');
     assert.match(await ev('document.querySelector(".aviso").textContent'), /viven en este navegador/);
     await foto(pag, '01-lista');
 
     // Filtro por grado
     await elegirGrado('3'); await pausa(100);
+    assert.equal(await ev('document.querySelectorAll(".ed-preset").length'), 1, 'solo el de 3.° de secundaria');
+    await elegirGrado('4'); await pausa(100);
     assert.equal(await ev('document.querySelectorAll(".ed-preset").length'), 0);
     await elegirGrado('todos'); await pausa(100);
 
@@ -76,12 +96,12 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'editor-' + n +
     await pag.clicEn('[data-a="guardar"]'); await pausa(200);
     assert.match(await ev('document.querySelector(".dialogo").textContent'), /necesita al menos 4 preguntas/);
     await pag.tecla('Enter'); await pausa(100);
-    assert.deepEqual(await nombres(), ['Ejemplo: Ciencias básicas', 'Plantilla vacía', 'Mi preset de prueba']);
+    assert.deepEqual(await nombres(), ['Anhídridos u óxidos ácidos', 'Ejemplo: Ciencias básicas', 'Plantilla vacía', 'Mi preset de prueba']);
     assert.ok(await ev('!!localStorage.getItem("apagon-aurora.presets.v1")'), 'persistió en localStorage');
 
     // Duplicar
-    await pag.clicEn('.ed-preset:first-child [data-a="duplicar"]'); await pausa(150);
-    assert.equal((await nombres())[3], 'Ejemplo: Ciencias básicas (copia)');
+    await pag.clicEn('.ed-preset[data-id="ejemplo-ciencias-basicas"] [data-a="duplicar"]'); await pausa(150);
+    assert.equal((await nombres())[4], 'Ejemplo: Ciencias básicas (copia)');
 
     // Exportar todos e importar el mismo archivo: conflicto de nombres
     const json = await ev('JSON.stringify(EA.presets.exportar(EA.editor.presets()))');
@@ -92,12 +112,12 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'editor-' + n +
     await pag.clicEn('.dialogo .acciones button:first-child'); await pausa(200);   // Omitir
     assert.match(await ev('document.querySelector(".dialogo").textContent'), /omitidos/);
     await pag.tecla('Enter'); await pausa(100);
-    assert.equal((await nombres()).length, 4);
+    assert.equal((await nombres()).length, 5);
     await ev('void EA.editor.importarTexto(' + JSON.stringify(json) + ')'); await pausa(200);
     await pag.clicEn('.dialogo .acciones button:last-child'); await pausa(200);    // Conservar ambos
     await pag.tecla('Enter'); await pausa(100);
-    // El ejemplo y su copia entran renombrados; la plantilla y el incompleto no pasan la validación.
-    assert.deepEqual((await nombres()).slice(4), ['Ejemplo: Ciencias básicas (2)', 'Ejemplo: Ciencias básicas (copia) (2)']);
+    // Los válidos entran renombrados; la plantilla y el incompleto no pasan la validación.
+    assert.deepEqual((await nombres()).slice(5), ['Anhídridos u óxidos ácidos (2)', 'Ejemplo: Ciencias básicas (2)', 'Ejemplo: Ciencias básicas (copia) (2)']);
 
     // Archivo inválido
     await ev('void EA.editor.importarTexto("{esto no es json")'); await pausa(150);
@@ -107,20 +127,21 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'editor-' + n +
     // Eliminar
     await pag.clicEn('.ed-preset:last-child [data-a="eliminar"]'); await pausa(150);
     await pag.clicEn('.dialogo .btn.peligro'); await pausa(150);
-    assert.equal((await nombres()).length, 5);
+    assert.equal((await nombres()).length, 7);
 
     // Restaurar ejemplos tras borrar el original
-    await pag.clicEn('.ed-preset:first-child [data-a="eliminar"]'); await pausa(150);
+    await pag.clicEn('.ed-preset[data-id="ejemplo-ciencias-basicas"] [data-a="eliminar"]'); await pausa(150);
     await pag.clicEn('.dialogo .btn.peligro'); await pausa(150);
     assert.ok(!(await nombres()).includes('Ejemplo: Ciencias básicas'));
     await pag.clicEn('[data-a="restaurar"]'); await pausa(150);
     await pag.clicEn('.dialogo .acciones button:last-child'); await pausa(150);
-    assert.equal((await nombres())[0], 'Ejemplo: Ciencias básicas');
+    assert.ok((await nombres()).includes('Ejemplo: Ciencias básicas'), 'el ejemplo borrado vuelve');
+    assert.equal((await nombres()).filter((n) => n === 'Anhídridos u óxidos ácidos').length, 1, 'sin duplicar los que ya estaban');
 
     // ---- Editar a fondo un preset existente: cada acción responde al primer clic
     const velos = () => ev('document.querySelectorAll("#capa-modal .velo").length');
     const cambiar = (sel, v) => ev('(function(){var s=document.querySelector(' + JSON.stringify(sel) + ');s.value=' + JSON.stringify(v) + ';s.dispatchEvent(new Event("change",{bubbles:true}))})()');
-    await pag.clicEn('.ed-preset:first-child [data-a="editar"]'); await pausa(150);
+    await pag.clicEn('.ed-preset[data-id="ejemplo-ciencias-basicas"] [data-a="editar"]'); await pausa(150);
     assert.equal(await ev('document.querySelector(".pagina-cab h2").textContent'), 'Editar preset');
     await pag.clicEn('#p-nombre'); await seleccionar('#p-nombre'); await pag.escribir('Ejemplo editado');
     await cambiar('#p-grado', '2');
@@ -166,14 +187,14 @@ const foto = (pag, n) => pag.captura(path.join(RAIZ, 'capturas', 'editor-' + n +
     await pag.clicEn('[data-a="guardar"]'); await pausa(200);
     assert.equal(await velos(), 0, 'un preset válido se guarda sin avisos');
     assert.equal(await ev('document.querySelector(".pagina-cab h2").textContent'), 'Editor de presets', 'guardar vuelve a la lista al primer clic');
-    const editado = JSON.parse(await ev('JSON.stringify(JSON.parse(localStorage.getItem("apagon-aurora.presets.v1"))[0])'));
+    const editado = JSON.parse(await ev('JSON.stringify(JSON.parse(localStorage.getItem("apagon-aurora.presets.v1")).filter(function(p){return p.id==="ejemplo-ciencias-basicas"})[0])'));
     assert.equal(editado.nombre, 'Ejemplo editado');
     assert.equal(editado.grado, '2');
     assert.deepEqual(editado.salas.map((x) => x.escena), ['biologia', 'quimica', 'fisica']);
     assert.equal(editado.salas[2].preguntas[0].alternativas.length, 3);
     assert.equal(editado.salas[2].preguntas[0].alternativas[2], 'Quinta opción');
     assert.equal(editado.salas[2].preguntas[0].correcta, 2);
-    assert.deepEqual(await ev('EA.presets.validarPreset(EA.editor.presets()[0]).errores'), []);
+    assert.deepEqual(await ev('EA.presets.validarPreset(EA.editor.presets().filter(function(p){return p.id==="ejemplo-ciencias-basicas"})[0]).errores'), []);
 
     // Los cambios sobreviven a recargar la página y el preset incompleto no aparece al jugar
     await pag.ir(urlJuego(''));

@@ -26,7 +26,7 @@ function pregunta(sala, i, nAlt) {
 const ESCENAS = ['invernadero', 'quimica', 'fisica', 'biologia', 'control'];
 const CANDADOS = { invernadero: 3, quimica: 4, fisica: 3, biologia: 4, control: 4 };
 const preset = {
-  esquema: 1, id: 'prueba-completa', nombre: 'Prueba completa ' + XSS, grado: '3', descripcion: 'Cinco salas ' + XSS,
+  esquema: 1, id: 'prueba-completa', nombre: 'Prueba completa ' + XSS, grado: '4', descripcion: 'Cinco salas ' + XSS,
   salas: ESCENAS.map((e, s) => ({ escena: e, preguntas: Array.from({ length: CANDADOS[e] + 2 }, (_, i) => pregunta(s, i, [4, 2, 5, 3, 4, 4][i % 6])) }))
 };
 const TOTAL_CANDADOS = ESCENAS.reduce((a, e) => a + CANDADOS[e], 0); // 18
@@ -209,14 +209,14 @@ const TOTAL_CANDADOS = ESCENAS.reduce((a, e) => a + CANDADOS[e], 0); // 18
     await ev('localStorage.clear()');
     await pag.ir(urlJuego(''));
     await ev('EA.almacen.guardarPresets(EA.almacen.presets().concat([EA.presets.normalizarPreset(' + JSON.stringify(preset) + ')]))');
-    assert.deepEqual(await ev('EA.presets.validarPreset(EA.almacen.presets()[2]).errores'), [], 'el preset de prueba es válido');
+    assert.deepEqual(await ev('EA.presets.validarPreset(EA.almacen.presets().filter(function(p){return p.id==="prueba-completa"})[0]).errores'), [], 'el preset de prueba es válido');
     await pag.ir(urlJuego(''));
     await ev('EA.CONFIG.ESPERA_CANDADO_MS=120; EA.CONFIG.ESPERA_PUERTA_MS=250');
 
     // Configuración: filtro por grado, 3 equipos con nombres con HTML y uno repetido
     await clic('[data-ir="configurar"]', 200);
-    assert.equal(await ev('document.querySelectorAll(".preset-op").length'), 2);
-    await ev('(function(){var s=document.querySelector("#f-grado");s.value="3";s.dispatchEvent(new Event("change",{bubbles:true}))})()'); await pausa(100);
+    assert.equal(await ev('document.querySelectorAll(".preset-op").length'), 3);
+    await ev('(function(){var s=document.querySelector("#f-grado");s.value="4";s.dispatchEvent(new Event("change",{bubbles:true}))})()'); await pausa(100);
     assert.equal(await ev('document.querySelectorAll(".preset-op").length'), 1, 'filtro por grado');
     assert.equal(await ev('document.querySelector(".preset-op input").checked'), true);
     await clic('#eq-mas');
@@ -226,7 +226,12 @@ const TOTAL_CANDADOS = ESCENAS.reduce((a, e) => a + CANDADOS[e], 0); // 18
     assert.equal(await ev('document.querySelector(\'.color-op[data-eq="0"][data-color="1"]\').disabled'), true);
     await clic('.color-op[data-eq="0"][data-color="5"]');
     await foto(pag, '00-configuracion');
-    await clic('#comenzar', 300);
+    await clic('#comenzar', 400);
+    // Historia: el plano muestra las 5 salas en orden y ningún texto del preset se interpreta como HTML
+    for (let i = 0; i < 3; i++) await clic('#hist-sig', 300);
+    assert.match(await ev('document.querySelector("#hist-txt").textContent'), /5 salas: Invernadero, Laboratorio de Química, Taller de Física, Laboratorio de Biología y Sala de Control/);
+    assert.equal(await ev('document.querySelectorAll(\'#hist-arte svg g[transform*="scale(1.25)"]\').length'), 5, 'cinco salas en el plano');
+    await clic('#hist-sig', 300);
     let s = await S();
     assert.deepEqual(s.eqs.map((e) => e.n), ['Alfa ' + XSS.slice(0, 24 - 5), 'Beta', 'beta 2'], 'nombre recortado a 24 y repetido renombrado');
     assert.equal(s.eqs.length, 3);
@@ -254,6 +259,11 @@ const TOTAL_CANDADOS = ESCENAS.reduce((a, e) => a + CANDADOS[e], 0); // 18
       if (t === 0 && !fotoSalas[s.esc.id]) { fotoSalas[s.esc.id] = true; }
     }
     await pausa(500);
+    // Final de la historia: el nombre del equipo (con HTML) aparece como texto, sin ejecutarse
+    assert.equal(await ev('document.querySelector("#pantalla").className'), 'p-historia');
+    assert.ok((await ev('document.querySelector("#hist-txt").textContent')).includes('Alfa <img src=x'), 'el nombre se muestra literal');
+    assert.equal(await ev('(window.__xss||0) + document.querySelectorAll("#pantalla img").length'), 0);
+    await clic('#hist-saltar', 400);
 
     // Resultado final exacto
     s = JSON.parse(await ev('JSON.stringify(EA.partida.equipos.map(function(e){return {p:e.puntaje,esc:e.escapo,ord:e.ordenEscape,st:e.stats,t:e.turnos}}))'));
