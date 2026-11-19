@@ -145,3 +145,13 @@ input[type="checkbox"], input[type="radio"] { width: 32px; height: 32px; accent-
 
 /* El lienzo nunca se desplaza, ni siquiera por foco o scroll programático. */
 @supports (overflow: clip) { #marco, #escenario { overflow: clip; } }
+
+/* Texto largo de los presets (enunciados, alternativas, nombres): se corta en varias líneas
+   antes que desbordar. Los hijos de grillas y filas flexibles pueden encogerse (min-width: 0). */
+#escenario { overflow-wrap: break-word; }
+.enunciado, .opcion .txt, .caja-pista > div, .repaso-item, .preset-op > span, .ed-preset-info,
+.globo, .cambio p, .veredicto > div, .dialogo-cuerpo, .tabla td, .resp-correcta, .hist-texto,
+.pagina-cab h2, .ficha-solo { overflow-wrap: anywhere; min-width: 0; }
+.config > *, .resumen > *, .ayuda-cols > * { min-width: 0; }
+.btn, .btn-icono { flex-shrink: 0; }
+.chip.recorta { max-width: 560px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }

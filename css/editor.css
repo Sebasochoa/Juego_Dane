@@ -13,7 +13,10 @@
 button.chip { cursor: pointer; }
 .ok-texto { color: var(--verde-l); font-weight: 700; }
 
-.ed-cols { display: grid; grid-template-columns: 600px 1fr; gap: 26px; flex: 1; min-height: 0; }
+/* minmax(0, 1fr): sin esto, un texto largo que no se corta (white-space: nowrap) ensancha la
+   columna más allá del lienzo y empuja fuera de la vista el botón «Agregar pregunta». */
+.ed-cols { display: grid; grid-template-columns: 600px minmax(0, 1fr); gap: 26px; flex: 1; min-height: 0; }
+.ed-cols > * { min-width: 0; }
 .ed-datos { padding: 20px 24px; }
 .ed-datos label { font-size: 22px; }
 .ed-datos input, .ed-datos select, .ed-datos textarea { min-height: 54px; font-size: 24px; margin-top: 4px; }
@@ -48,7 +51,8 @@ button.chip { cursor: pointer; }
 .q-radio { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .q-radio .letra { width: 44px; height: 44px; border-radius: 12px; background: var(--tinta-l); display: flex; align-items: center; justify-content: center; font-weight: 800; }
 .q-radio:has(input:checked) .letra { background: var(--verde); color: var(--tinta-s); }
-.q-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+.q-dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; margin-top: 8px; }
+.q-alt input[type="text"] { min-width: 0; }
 .q-mini { height: 54px; max-width: 120px; border-radius: 8px; background: var(--crema-l); object-fit: contain; }
 #q-errores ul { margin: 12px 0 0; font-size: 23px; }
 .dialogo.ancho { padding: 28px 40px 30px; }

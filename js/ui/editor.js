@@ -195,7 +195,7 @@
             + '<p class="tenue" style="font-size:21px;margin:8px 0 10px">El escenario es solo el decorado: puede cargar preguntas de cualquier tema. Necesita al menos ' + (escSala ? escSala.candados.length : 0) + ' (una por candado); si carga más, cada equipo recibe un sorteo distinto.</p>'
             + '<ol class="ed-preguntas desliza">' + (sala.preguntas.length ? sala.preguntas.map(function (q, j) {
               var errs = P.validarPregunta(P.normalizarPregunta(q));
-              return '<li class="ed-q' + (errs.length ? ' mal' : '') + '"><span class="num">' + (j + 1) + '</span><div class="ed-q-txt"><p>' + (F(q.enunciado) || '<span class="tenue">(sin enunciado)</span>') + '</p>'
+              return '<li class="ed-q' + (errs.length ? ' mal' : '') + '"><span class="num">' + (j + 1) + '</span><div class="ed-q-txt"><p>' + (F(q.enunciado.replace(/\s*\n+\s*/g, ' ')) || '<span class="tenue">(sin enunciado)</span>') + '</p>'
                 + '<small>' + (errs.length ? '<span class="error-texto">' + A.icono('cruz', 16) + ' ' + esc(errs[0]) + '</span>' : '<span class="ok-texto">' + A.icono('check', 16) + ' ' + F(q.alternativas[q.correcta]) + '</span>') + (q.rama ? ' · ' + esc(P.nombreRama(q.rama)) : '') + '</small></div>'
                 + '<button type="button" class="btn-icono mini" data-a="q-editar" data-i="' + j + '" aria-label="Editar pregunta ' + (j + 1) + '" title="Editar">' + A.icono('editar', 22) + '</button>'
                 + '<button type="button" class="btn-icono mini" data-a="q-ver" data-i="' + j + '" aria-label="Vista previa de la pregunta ' + (j + 1) + '" title="Vista previa">' + A.icono('ojo', 22) + '</button>'
