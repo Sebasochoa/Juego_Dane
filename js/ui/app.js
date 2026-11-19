@@ -172,6 +172,7 @@
     cont = document.getElementById('pantalla');
     capaModal = document.getElementById('capa-modal');
     vivo = document.getElementById('vivo');
+    EA.almacen.presets(); // agrega los ejemplos nuevos (y deja elegido el predeterminado) antes de leer las preferencias
     var prefs = EA.almacen.prefs();
     EA.audio.setVolumen(prefs.volumen);
     EA.audio.setSilencio(prefs.silencio);

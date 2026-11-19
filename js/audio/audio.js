@@ -82,6 +82,12 @@
     puerta: function () { ruido({ f: 300, hasta: 1400, dur: 1.5, vol: 0.2, en: 0.5 }); tono({ f: 70, hasta: 110, dur: 1.5, tipo: 'sine', vol: 0.3, en: 0.5 }); tono({ f: 880, dur: 0.3, tipo: 'sine', vol: 0.2, en: 2.0 }); },
     turno: function () { tono({ f: 587, dur: 0.18, tipo: 'sine', vol: 0.28 }); tono({ f: 880, dur: 0.32, tipo: 'sine', vol: 0.28, en: 0.16 }); },
     tic: function () { tono({ f: 1000, dur: 0.04, tipo: 'square', vol: 0.08 }); },
+    apagon: function () {
+      tono({ f: 520, hasta: 60, dur: 0.7, tipo: 'sawtooth', vol: 0.16 });
+      ruido({ f: 900, hasta: 200, dur: 0.35, vol: 0.18 });
+      tono({ f: 90, dur: 0.12, tipo: 'square', vol: 0.18, en: 0.05 });
+    },
+    robot: function () { [660, 990, 780, 1180].forEach(function (f, i) { tono({ f: f, dur: 0.09, tipo: 'square', vol: 0.09, en: i * 0.09 }); }); },
     victoria: function () {
       [[523, 0], [659, 0.14], [784, 0.28], [1047, 0.42], [784, 0.62], [1047, 0.76], [1319, 0.9]].forEach(function (n) { tono({ f: n[0], dur: 0.3, tipo: 'triangle', vol: 0.3, en: n[1] }); });
       [262, 330, 392].forEach(function (f) { tono({ f: f, dur: 1.4, tipo: 'sine', vol: 0.16, en: 0.9 }); });

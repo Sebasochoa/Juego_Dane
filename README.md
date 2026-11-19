@@ -1,10 +1,11 @@
-# Apagón en el Aurora
+# El laboratorio del científico
 
-Escape room 2D *point-and-click* para clases de ciencias de secundaria. Un apagón bloqueó
-el Instituto Aurora: los equipos, guiados por el robot Volti, reabren cada sala
-«recalibrando» candados con preguntas de biología, química y física.
+Escape room 2D *point-and-click* para clases de ciencias de secundaria. Los estudiantes se colaron
+en el laboratorio del doctor Ámbar y un apagón los dejó encerrados: guiados por Volti, el robot
+asistente, abren los candados de cada sala respondiendo preguntas de biología, química y física,
+y escapan antes de que se acabe el tiempo.
 
-Está pensado para que el docente lo **proyecte en clase** y los equipos jueguen por turnos.
+Está pensado para que el docente lo **proyecte en clase**: por turnos entre equipos o como un solo equipo.
 
 - 100 % estático: HTML + CSS + JavaScript, sin servidor, sin dependencias y sin conexión.
 - Funciona publicado en GitHub Pages **y** abriendo `index.html` con doble clic.
@@ -16,22 +17,27 @@ Está pensado para que el docente lo **proyecte en clase** y los equipos jueguen
 ## Cómo jugar
 
 1. Abra el juego y elija **Jugar**.
-2. Elija un **preset** (puede filtrar por grado), configure de **2 a 4 equipos** (nombre y color)
-   y, si quiere, active el **temporizador por turno** (30 a 180 segundos).
-3. Cada equipo tiene **su propia copia del laboratorio**: su avance, su inventario y su puntaje.
-   Los equipos se alternan en la misma pantalla.
-4. En su turno, el equipo puede **explorar sin gastar el turno**: examinar la sala, recoger objetos
+2. Elija un **preset** (puede filtrar por grado; viene elegido «Anhídridos u óxidos ácidos») y el **modo de juego**:
+   - **Por turnos:** de 2 a 4 equipos (nombre y color). Opcional: **temporizador por turno** (30 a 180 segundos).
+   - **Un solo equipo:** juega todo el tiempo, sin turnos (por ejemplo, toda la clase como un equipo).
+     Opcional: **tiempo límite para escapar** (5 a 60 minutos), que en la historia es la energía de respaldo.
+3. Si está marcado «Mostrar la historia», se cuenta el inicio en cuatro ilustraciones (se puede saltar con `Esc`).
+   Al final, si alguien escapó o se acabó el tiempo, se cuenta el desenlace antes de los resultados.
+4. En el modo por turnos cada equipo tiene **su propia copia del laboratorio**: su avance, su inventario
+   y su puntaje. Los equipos se alternan en la misma pantalla.
+5. En su turno, el equipo puede **explorar sin gastar el turno**: examinar la sala, recoger objetos
    y combinarlos (clic en uno y luego en otro, o arrastrando). El objeto combinado se usa en un
    punto de la sala para activar un candado que estaba sin energía.
-5. **Intentar un candado consume el turno**: se abre una pregunta de opción múltiple.
+6. **Intentar un candado consume el turno**: se abre una pregunta de opción múltiple.
    - Acierto al primer intento: **100** puntos.
-   - Primer fallo: se muestra la **pista** y el turno pasa. Si aciertan en el reintento: **50**.
+   - Primer fallo: se muestra la **pista** y el turno pasa (con un solo equipo, puede reintentar enseguida). Si aciertan en el reintento: **50**.
    - Segundo fallo en el mismo candado: se muestra la **explicación** y el candado se abre con **0** puntos,
      para no frenar la clase.
-6. Con todos los candados abiertos, la puerta se abre (**+50** por sala). La puerta de la última sala
-   es la salida; el **primer equipo en escapar gana +200**. Con temporizador hay hasta **+25** por rapidez.
-7. La partida termina cuando todos escapan o cuando el docente pulsa **Terminar partida** (ícono de bandera).
-   El resumen muestra el podio, la tabla por equipo, las preguntas más falladas («Para repasar»)
+7. Con todos los candados abiertos, la puerta se abre (**+50** por sala). La puerta de la última sala
+   es la salida; el **primer equipo en escapar gana +200** (con un solo equipo, escapar da +200).
+   Con temporizador por turno hay hasta **+25** por rapidez.
+8. La partida termina cuando todos escapan, cuando se acaba el tiempo límite (un solo equipo) o cuando
+   el docente pulsa **Terminar partida** (ícono de bandera). El resumen muestra el podio (o la ficha del equipo), la tabla por equipo, las preguntas más falladas («Para repasar»)
    y permite **descargar los resultados en CSV**.
 
 El botón **Ayuda** del asistente da una pista del puzzle de objetos, sin penalización.
@@ -67,7 +73,7 @@ Un **preset** es un nombre, un grado (1.° a 5.° de secundaria o Mixto), una de
 ordenada de **2 a 5 salas**; cada sala tiene un escenario y su banco de preguntas.
 
 1. En el menú, entre a **Editor de presets**.
-2. **Nuevo preset** (o duplique el ejemplo o la «Plantilla vacía»).
+2. **Nuevo preset** (o duplique uno de los ejemplos o la «Plantilla vacía»).
 3. Agregue salas y elija el escenario de cada una. El escenario es solo el decorado: las preguntas
    pueden ser de cualquier tema.
 
@@ -98,7 +104,15 @@ dentro del preset. No se admiten direcciones de internet.
 - **Exportar** (un preset, o «Exportar todos») descarga un archivo `.json`.
 - **Importar JSON** en la otra computadora lo carga. El archivo se valida; si un nombre ya existe,
   puede conservar ambos, reemplazar el suyo u omitirlo.
-- **Restaurar ejemplos** vuelve a agregar el preset de ejemplo y la plantilla.
+- **Restaurar ejemplos** vuelve a agregar los presets de ejemplo y la plantilla.
+
+### Presets incluidos
+
+- **Anhídridos u óxidos ácidos** (3.° de secundaria, predeterminado): formación y nomenclatura de óxidos ácidos, 14 preguntas en 2 salas.
+- **Ejemplo: Ciencias básicas** (Mixto): 15 preguntas de química, biología y física en 3 salas.
+- **Plantilla vacía**: dos salas listas para completar.
+
+Los navegadores que ya tenían presets guardados reciben los ejemplos nuevos una sola vez, sin tocar los demás.
 
 ---
 
@@ -147,8 +161,18 @@ Solo se necesita [Node.js](https://nodejs.org) 22 o superior. No hay nada que in
 node --test
 ```
 
-Ejecuta las pruebas de la lógica pura (turnos, puntaje, sorteo, validación e importación de presets,
-notación científica, contraste AA de la paleta) e incluye una partida completa de 2 equipos.
+Ejecuta las pruebas de la lógica pura (turnos, puntaje, sorteo, modos de juego, historia, validación,
+importación y migración de presets, notación científica, contraste AA de la paleta) e incluye una partida
+completa de 2 equipos. También verifica que el preset de anhídridos conserve las preguntas y alternativas del
+docente y que sus ecuaciones estén balanceadas.
+
+Para correr todas las pruebas en navegador de una vez:
+
+```bash
+npm run e2e
+```
+
+O una por una:
 
 Las pruebas en navegador usan Chrome o Edge ya instalados, en modo *headless* (sin dependencias;
 si no los encuentra, defina la variable `CHROME_PATH`):
@@ -174,16 +198,30 @@ node tools/e2e-completo.js
 ```
 
 ```bash
+node tools/e2e-solo.js
+```
+
+```bash
+node tools/e2e-diseno.js
+```
+
+```bash
 node tools/capturas.js
 ```
 
-- `e2e.js`: partida completa con 2 equipos usando clics y teclado reales (aciertos, fallo con pista,
-  fallo con explicación, escape de ambos, resumen).
-- `e2e-editor.js`: crear, validar, vista previa, guardar, duplicar, exportar, importar con conflicto, eliminar y restaurar.
+- `e2e.js`: partida completa con 2 equipos usando clics y teclado reales (historia de inicio, aciertos,
+  fallo con pista, fallo con explicación, escape de ambos, historia final, resumen).
+- `e2e-editor.js`: crear, validar, vista previa, guardar, duplicar, exportar, importar con conflicto, eliminar y restaurar;
+  también la llegada del preset nuevo a un navegador que ya tenía presets guardados.
 - `e2e-navegacion.js`: entra y sale varias veces de cada pantalla y comprueba que cada clic actúa una sola vez
   (un diálogo por acción, «Cancelar» y «Guardar» responden al primer clic, las partidas nuevas no heredan nada de la anterior).
 - `e2e-completo.js`: partida de 90 turnos con las 5 salas y 3 equipos (uno acierta siempre, otro usa las pistas, otro llega a la
   explicación); en cada turno compara la pantalla con el estado y verifica que el texto de los presets nunca se interprete como HTML. Tarda unos 3 minutos.
+- `e2e-solo.js`: modo un solo equipo completo (reintento con pista, cambio de sala, escape, energía agotada
+  explorando y con una pregunta abierta, fin por el docente).
+- `e2e-diseno.js`: recorre 41 pantallas con contenido extremo (textos larguísimos, palabras sin espacios,
+  5 alternativas, 4 equipos, 5 salas y el preset real) y audita en cada una que nada se salga del lienzo,
+  que no haya desbordes y que todos los botones visibles se puedan pulsar.
 - `e2e-extras.js`: temporizador, 4 equipos, resoluciones 1366×768 y 4:3, reemplazo de arte, zonas de clic y movimiento reducido.
 - `capturas.js`: renderiza cada escena a PNG en `capturas/` para revisarlas a ojo.
 
@@ -197,10 +235,10 @@ Estas herramientas son solo de desarrollo: el juego no las carga.
 index.html            Página única
 css/                  paleta.css (colores), base.css, escena.css (animaciones), ui.css, editor.css
 js/config.js          Puntajes y límites
-js/core/              Lógica pura: util, escenas (textos y puzzles), presets, juego
-js/art/               Biblioteca SVG (base, lab, taller), escenas y registro de reemplazos
+js/core/              Lógica pura: util, escenas (textos y puzzles), presets, juego, historia
+js/art/               Biblioteca SVG (base, lab, taller, historia), escenas y registro de reemplazos
 js/audio/             Efectos y música con Web Audio
-js/ui/                Pantallas: menú, configuración, juego, resumen, editor
+js/ui/                Pantallas: menú, configuración, historia, juego, resumen, editor
 data/                 Presets de ejemplo embebidos
 docs/ARTE.md          Guía de arte
 tests/                Pruebas con node --test

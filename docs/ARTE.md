@@ -1,4 +1,4 @@
-# Guía de arte — Apagón en el Aurora
+# Guía de arte — El laboratorio del científico
 
 Todo el arte del juego es SVG + CSS escrito a mano. Esta guía es la fuente de verdad:
 cualquier componente nuevo (o reemplazo del docente) debe obedecerla para que las
@@ -104,7 +104,17 @@ y el **verde/coral** para acierto/error (siempre acompañados de ícono y texto)
 - Micro-animaciones ambientales (burbujas, vapor, LED, péndulo, pantallas): solo
   `transform` y `opacity`, y se desactivan con `prefers-reduced-motion`.
 
-## 9. Componentes y reemplazos
+## 9. Personajes e ilustraciones de la historia
+
+- **Solo Volti tiene rostro** (expresiones: neutral, pensando, contento, dormido).
+- Los estudiantes se dibujan **de espaldas** (se ve el pelo y la mochila), con ropa y mochilas de la
+  paleta y tonos de piel variados (`--madera-l`, `--madera`, `--naranja-l`).
+- El doctor Ámbar aparece **solo a contraluz**: silueta oscura con un borde de luz y el reflejo de sus
+  anteojos. Su símbolo es una gema de ámbar (el ámbar dio nombre a la electricidad).
+- Las ilustraciones de la historia miden **1600 × 640** y se componen con los mismos muebles y objetos
+  de las salas (`js/art/historia.js`). Cada sala tiene un ícono de 120 × 120 en su color de acento.
+
+## 10. Componentes y reemplazos
 
 Cada componente está registrado con un identificador y una caja nominal (ancho × alto)
 en `js/art/`. El docente puede sustituir cualquiera desde `js/art/registro.js`

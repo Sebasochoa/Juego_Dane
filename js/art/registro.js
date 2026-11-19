@@ -15,6 +15,8 @@
  *   ui.candado (100×120)   ui.puerta (300×560)   ui.robot (200×240)
  * Objetos del inventario:
  *   obj.limon   obj.electrodos   obj.pila-limon   obj.portaobjetos   obj.tinte   obj.muestra-tenida
+ * Ilustraciones de la historia (1600 × 640):
+ *   hist.exterior   hist.apagon   hist.volti   hist.mapa   hist.salida   hist.nota   hist.sinEnergia
  *
  * Ejemplos:
  *   'fondo.quimica': 'arte/mi-laboratorio.png',

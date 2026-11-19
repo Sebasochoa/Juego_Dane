@@ -64,8 +64,8 @@
     if (!r.motivoFin || r.motivoFin === 'docente') return [];
     var doc = CFG.CIENTIFICO;
     var nota = {
-      arte: 'hist.nota', titulo: 'Una nota junto a la salida',
-      texto: 'Afuera los esperaba una nota: «Entrar sin permiso no estuvo bien… pero resolver todos mis candados fue brillante. '
+      arte: 'hist.nota', titulo: 'Una nota del doctor',
+      texto: 'Sobre la última mesa los esperaba una nota: «Entrar sin permiso no estuvo bien… pero resolver todos mis candados fue brillante. '
         + 'Los espero el lunes como ayudantes del laboratorio. — ' + CFG.CIENTIFICO_FIRMA + '».'
     };
     if (r.modo === 'solo') {

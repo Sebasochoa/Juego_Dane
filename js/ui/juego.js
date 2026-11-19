@@ -9,10 +9,12 @@
     montar: function (el, params) {
       var st = J.crearPartida(params.preset, params.equipos, params.opciones, params.semilla);
       EA.partida = st; // accesible para depurar y para la prueba de punta a punta
+      var solo = J.esSolo(st);
       var ui = {
         salaIdx: 0, seleccion: null, pausado: false, restante: 0, usado: 0, ultimo: 0,
         elegida: null, pregunta: null, enResultado: null, bloqueo: false, dlg: null,
-        vistas: {}, timerGlobo: 0, timerPaso: 0, suprimirClic: false, ultimoTic: -1, vivo: true
+        vistas: {}, timerGlobo: 0, timerPaso: 0, suprimirClic: false, ultimoTic: -1, vivo: true,
+        restanteTotal: st.opciones.limite, avisoMinuto: false, salaMostrada: -1, terminando: false
       };
 
       el.innerHTML = '<div class="juego">'
@@ -29,7 +31,7 @@
         + '<button type="button" class="btn chico" id="b-ayuda">' + A.icono('ayuda', 28) + 'Ayuda <kbd>H</kbd></button></div>'
         + '<div class="robot" id="robot" aria-hidden="true"></div></div>'
         + '<div class="capa" id="capa" hidden></div>'
-        + '<div class="capa pausa" id="pausa" hidden><h2>Juego en pausa</h2><p class="tenue">El temporizador está detenido.</p>'
+        + '<div class="capa pausa" id="pausa" hidden><h2>Juego en pausa</h2><p class="tenue">El tiempo está detenido.</p>'
         + '<button type="button" class="btn" id="b-reanudar">' + A.icono('play', 30) + 'Reanudar <kbd>P</kbd></button></div>'
         + '</div>';
 
@@ -82,7 +84,8 @@
         var e = eq();
         $('#hud-equipos').innerHTML = st.equipos.map(function (t, i) {
           var activo = i === st.turno && st.fase !== 'fin';
-          var estado = t.escapo ? 'Escapó (' + t.ordenEscape + '.º)' : activo ? 'En turno' : 'Sala ' + (t.salaIdx + 1) + '/' + t.salas.length;
+          var estado = t.escapo ? (solo ? 'Escapó' : 'Escapó (' + t.ordenEscape + '.º)')
+            : activo && !solo ? 'En turno' : 'Sala ' + (t.salaIdx + 1) + '/' + t.salas.length;
           return '<li class="hud-eq' + (activo ? ' activo' : '') + (t.escapo ? ' escapo' : '') + '" style="--eq:' + esc(t.color) + '"' + (activo ? ' aria-current="true"' : '') + '>'
             + EA.ui.simbolo(t, 26) + '<span class="nom"><small>' + estado + '</small>' + esc(t.nombre) + '</span><span class="pts" aria-label="' + t.puntaje + ' puntos">' + t.puntaje + '</span></li>';
         }).join('');
@@ -94,15 +97,22 @@
       function pintarTiempo() {
         var t = $('#hud-tiempo');
         var lim = st.opciones.temporizador;
-        if (lim) {
+        if (st.opciones.limite) {
+          // Modo un solo equipo con tiempo límite: la energía de respaldo se agota.
+          var rt = Math.max(0, ui.restanteTotal);
+          t.className = 'hud-tiempo energia' + (rt <= 60 ? ' urgente' : '');
+          t.setAttribute('aria-label', 'Energía de respaldo: tiempo que queda para escapar');
+          t.title = 'Energía de respaldo';
+          t.innerHTML = A.icono('bateria', 30) + '<span>' + U.formatoTiempo(Math.ceil(rt)) + '</span><span class="barra" style="transform:scaleX(' + (rt / st.opciones.limite).toFixed(3) + ')"></span>';
+        } else if (lim) {
           var r = Math.max(0, ui.restante);
           t.className = 'hud-tiempo' + (r <= 10 ? ' urgente' : '');
           t.setAttribute('aria-label', 'Tiempo restante del turno');
           t.innerHTML = A.icono('reloj', 30) + '<span>' + U.formatoTiempo(Math.ceil(r)) + '</span><span class="barra" style="transform:scaleX(' + (r / lim).toFixed(3) + ')"></span>';
         } else {
           t.className = 'hud-tiempo libre';
-          t.setAttribute('aria-label', 'Tiempo usado en el turno');
-          t.innerHTML = A.icono('reloj', 30) + '<span>' + U.formatoTiempo(ui.usado) + '</span>';
+          t.setAttribute('aria-label', solo ? 'Tiempo de juego' : 'Tiempo usado en el turno');
+          t.innerHTML = A.icono('reloj', 30) + '<span>' + U.formatoTiempo(solo ? eq().tiempo + ui.usado : ui.usado) + '</span>';
         }
       }
 
@@ -138,6 +148,16 @@
       // ------------------------------------------------------------ turnos
       function mostrarCambio() {
         var e = eq();
+        // Un solo equipo: entre intentos de la misma sala se sigue jugando sin pantalla intermedia.
+        if (solo && ui.salaMostrada === e.salaIdx) {
+          ui.seleccion = null; ui.bloqueo = false; ui.usado = 0;
+          pintarInventario();
+          J.iniciarTurno(st);
+          ui.ultimo = performance.now();
+          pintarHud();
+          return;
+        }
+        ui.salaMostrada = e.salaIdx;
         ui.salaIdx = e.salaIdx;
         ui.seleccion = null;
         ui.bloqueo = false;
@@ -150,15 +170,25 @@
         var clave = e.id + ':' + ui.salaIdx;
         var primera = !ui.vistas[clave];
         capa.hidden = false; fondo();
-        capa.innerHTML = '<div class="cambio" role="dialog" aria-modal="true" aria-label="Cambio de turno">'
-          + '<p class="ante">Turno de</p>'
-          + '<p class="nombre" style="--eq:' + esc(e.color) + '">' + EA.ui.simbolo(e, 66) + '<span>' + esc(e.nombre) + '</span></p>'
-          + '<p class="info">Sala ' + (ui.salaIdx + 1) + ' de ' + e.salas.length + ' · ' + esc(escenaLog().nombre) + ' · ' + abiertos + ' de ' + s.candados.length + ' candados abiertos · ' + e.puntaje + ' puntos</p>'
+        var cuerpo;
+        if (solo) {
+          var log = escenaLog();
+          cuerpo = '<p class="ante">Sala ' + (ui.salaIdx + 1) + ' de ' + e.salas.length + '</p>'
+            + '<p class="nombre">' + A.iconoSala(log.id, 110) + '<span>' + esc(log.nombre) + '</span></p>'
+            + '<p class="info">' + s.candados.length + ' candados · ' + e.puntaje + ' puntos'
+            + (st.opciones.limite ? ' · Energía: ' + U.formatoTiempo(Math.ceil(ui.restanteTotal)) : '') + '</p>';
+        } else {
+          cuerpo = '<p class="ante">Turno de</p>'
+            + '<p class="nombre" style="--eq:' + esc(e.color) + '">' + EA.ui.simbolo(e, 66) + '<span>' + esc(e.nombre) + '</span></p>'
+            + '<p class="info">Sala ' + (ui.salaIdx + 1) + ' de ' + e.salas.length + ' · ' + esc(escenaLog().nombre) + ' · ' + abiertos + ' de ' + s.candados.length + ' candados abiertos · ' + e.puntaje + ' puntos</p>';
+        }
+        capa.innerHTML = '<div class="cambio" role="dialog" aria-modal="true" aria-label="' + (solo ? 'Nueva sala' : 'Cambio de turno') + '">'
+          + cuerpo
           + (primera ? '<p class="intro">' + esc(escenaLog().intro) + '</p>' : '')
-          + '<button type="button" class="btn" id="b-turno">Comenzar turno <kbd>Enter</kbd></button></div>';
+          + '<button type="button" class="btn" id="b-turno">' + (solo ? 'Entrar a la sala' : 'Comenzar turno') + ' <kbd>Enter</kbd></button></div>';
         $('#b-turno').focus({ preventScroll: true });
         EA.audio.fx('turno');
-        EA.ui.anunciar('Turno de ' + e.nombre);
+        EA.ui.anunciar(solo ? 'Sala ' + (ui.salaIdx + 1) + ': ' + escenaLog().nombre : 'Turno de ' + e.nombre);
       }
 
       function comenzarTurno() {
@@ -170,7 +200,9 @@
         var clave = e.id + ':' + ui.salaIdx;
         if (!ui.vistas[clave]) {
           ui.vistas[clave] = true;
-          decir('<b>' + esc(escenaLog().nombre) + '.</b> Exploren con calma: examinar y recoger no gasta el turno. Cuando estén listos, elijan un candado.');
+          decir('<b>' + esc(escenaLog().nombre) + '.</b> ' + (solo
+            ? 'Exploren con calma: examinen todo y recojan lo que sirva. Cuando estén listos, elijan un candado.'
+            : 'Exploren con calma: examinar y recoger no gasta el turno. Cuando estén listos, elijan un candado.'));
         }
         pintarHud();
         var primero = escenaEl.querySelector('.hot-candado');
@@ -182,13 +214,37 @@
         if (!ui.vivo) return;
         var r = J.pasarTurno(st, ui.usado);
         if (!r) return;
-        if (r.fin) irResumen();
+        if (r.fin) irFinal();
         else mostrarCambio();
       }
 
-      function irResumen() {
+      /** Fin de la partida: la historia del final (si corresponde) y luego los resultados. */
+      function irFinal() {
+        if (!ui.vivo) return;
         ui.vivo = false;
-        EA.ui.ir('resumen', { estado: st, params: params });
+        var paneles = params.historia === false ? [] : EA.historia.final(J.resumen(st));
+        if (paneles.length) EA.ui.ir('historia', { paneles: paneles, siguiente: 'resumen', estado: st, params: params });
+        else EA.ui.ir('resumen', { estado: st, params: params });
+      }
+
+      /** Modo un solo equipo: la energía de respaldo llegó a cero. */
+      function energiaAgotada() {
+        if (ui.terminando) return;
+        ui.terminando = true;
+        if (ui.dlg) { ui.dlg.cerrar(); ui.dlg = null; }
+        J.terminar(st, ui.usado, 'tiempo');
+        ui.bloqueo = true;
+        ui.enResultado = null;
+        EA.audio.fx('error');
+        callar(); robot('pensando');
+        capa.hidden = false; fondo();
+        capa.innerHTML = '<div class="tarjeta" tabindex="-1" role="dialog" aria-modal="true" aria-label="Se acabó la energía" style="width:1060px">'
+          + '<div class="veredicto mal"><span class="sello">' + A.icono('bateria', 60) + '</span><div><h2>¡Se acabó la energía!</h2>'
+          + '<p>La batería de respaldo llegó a cero antes de que pudieran escapar.</p></div></div>'
+          + '<div class="tarjeta-pie"><span class="teclas"></span><button type="button" class="btn" id="b-final">Continuar <kbd>Enter</kbd></button></div></div>';
+        $('#b-final').focus({ preventScroll: true });
+        pintarHud();
+        EA.ui.anunciar('Se acabó la energía de respaldo.');
       }
 
       // ------------------------------------------------------------ temporizador
@@ -199,6 +255,16 @@
         if (ui.pausado || ui.bloqueo || (st.fase !== 'explorar' && st.fase !== 'pregunta')) return;
         if (dt > 2) dt = 0.25; // pestaña en segundo plano: no descontar de golpe
         ui.usado += dt;
+        if (st.opciones.limite) {
+          ui.restanteTotal -= dt;
+          var quedan = Math.ceil(ui.restanteTotal);
+          if (quedan <= 10 && quedan > 0 && quedan !== ui.ultimoTic) { ui.ultimoTic = quedan; EA.audio.fx('tic'); }
+          if (quedan <= 60 && quedan > 0 && !ui.avisoMinuto) {
+            ui.avisoMinuto = true;
+            if (st.fase === 'explorar') decir('¡Queda <b>menos de un minuto</b> de energía! Apúrense.', 'pensando');
+          }
+          if (ui.restanteTotal <= 0) { ui.restanteTotal = 0; pintarTiempo(); energiaAgotada(); return; }
+        }
         if (st.opciones.temporizador) {
           ui.restante -= dt;
           var seg = Math.ceil(ui.restante);
@@ -319,7 +385,9 @@
         EA.audio.fx('clic');
         ui.dlg = EA.ui.dialogo({
           titulo: 'Candado ' + (i + 1) + ': ' + escenaLog().candados[i],
-          html: '<p>Al intentarlo se abre la pregunta y <b>se usa el turno</b> del equipo.</p>'
+          html: (solo
+            ? '<p>Se abrirá su pregunta. Si fallan, verán una pista y podrán volver a intentarlo.</p>'
+            : '<p>Al intentarlo se abre la pregunta y <b>se usa el turno</b> del equipo.</p>')
             + (c.fallos > 0 ? '<p class="aviso">' + A.icono('bombilla', 34) + '<span>Segundo intento: tendrán la pista a la vista. Si fallan otra vez, el candado se abre sin puntos.</span></p>' : ''),
           botones: [
             { texto: 'Seguir explorando', clase: 'sec', tecla: 'Escape', accion: function () { ui.dlg = null; } },
@@ -355,7 +423,8 @@
 
       function htmlEnunciado(q) {
         var img = (q.imagen && EA.presets.imagenValida(q.imagen)) ? '<img class="pregunta-img" src="' + esc(q.imagen) + '" alt="Imagen de la pregunta">' : '';
-        return '<div class="pregunta-cuerpo"><p class="enunciado' + (U.plano(q.enunciado).length > 150 ? ' largo' : '') + '" id="enunciado">' + F(q.enunciado) + '</p>' + img + '</div>';
+        var largo = U.plano(q.enunciado).length;
+        return '<div class="pregunta-cuerpo"><p class="enunciado' + (largo > 280 ? ' largo muy-largo' : largo > 150 ? ' largo' : '') + '" id="enunciado">' + F(q.enunciado) + '</p>' + img + '</div>';
       }
 
       function abrirPregunta(i) {
@@ -365,9 +434,9 @@
         callar(); robot('pensando');
         capa.hidden = false; fondo();
         capa.innerHTML = '<div class="tarjeta" tabindex="-1" role="dialog" aria-modal="true" aria-label="Pregunta del candado ' + (i + 1) + '">'
-          + cabeceraTarjeta(q) + htmlEnunciado(q)
+          + cabeceraTarjeta(q) + '<div class="tarjeta-cuerpo">' + htmlEnunciado(q)
           + (q.pista ? '<div class="caja-pista">' + A.icono('bombilla', 38) + '<div><b>Pista</b>' + F(q.pista) + '</div></div>' : '')
-          + htmlOpciones(q, null)
+          + htmlOpciones(q, null) + '</div>'
           + '<div class="tarjeta-pie"><span class="teclas">Elijan con <kbd>A</kbd>–<kbd>' + LETRAS[q.alternativas.length - 1] + '</kbd> o <kbd>1</kbd>–<kbd>' + q.alternativas.length + '</kbd> y confirmen con <kbd>Enter</kbd></span>'
           + '<button type="button" class="btn" id="b-confirmar" disabled>Confirmar respuesta <kbd>Enter</kbd></button></div></div>';
         // El foco va a la tarjeta, no a una alternativa: así Enter no elige nada por accidente.
@@ -400,7 +469,12 @@
         var titulo, sub;
         if (res.correcto) { titulo = '¡Correcto!'; sub = res.tipo === 'primer' ? 'Al primer intento.' : 'Bien aprovechada la pista.'; }
         else if (res.tiempoAgotado) { titulo = 'Se acabó el tiempo'; sub = 'Cuenta como un intento fallido.'; }
-        else { titulo = 'Respuesta incorrecta'; sub = res.tipo === 'fallo' ? 'El candado sigue cerrado: podrán reintentarlo en su próximo turno.' : 'Segundo fallo: el candado se abre, pero sin puntos.'; }
+        else {
+          titulo = 'Respuesta incorrecta';
+          sub = res.tipo !== 'fallo' ? 'Segundo fallo: el candado se abre, pero sin puntos.'
+            : solo ? 'El candado sigue cerrado: pueden volver a intentarlo cuando quieran.'
+            : 'El candado sigue cerrado: podrán reintentarlo en su próximo turno.';
+        }
         if (res.tiempoAgotado && res.tipo === 'explicacion') sub = 'Segundo fallo: el candado se abre, pero sin puntos.';
         if (res.tiempoAgotado && res.tipo === 'fallo') sub = 'Cuenta como un intento fallido. Podrán reintentar el candado en su próximo turno.';
 
@@ -408,7 +482,7 @@
         if (res.correcto) chips += '<span class="chip">+' + res.puntos + ' ' + (res.tipo === 'primer' ? 'primer intento' : 'con pista') + '</span>';
         if (res.bonoRapidez) chips += '<span class="chip">+' + res.bonoRapidez + ' rapidez</span>';
         if (res.bonoSala) chips += '<span class="chip">+' + res.bonoSala + ' sala completada</span>';
-        if (res.bonoEscape) chips += '<span class="chip">+' + res.bonoEscape + ' primer equipo en escapar</span>';
+        if (res.bonoEscape) chips += '<span class="chip">+' + res.bonoEscape + (solo ? ' por escapar' : ' primer equipo en escapar') + '</span>';
         if (res.abierto) chips += '<span class="chip total">' + (res.total > 0 ? '+' + res.total : '0') + ' puntos</span>';
 
         var caja = '';
@@ -417,13 +491,13 @@
 
         capa.hidden = false; fondo();
         capa.innerHTML = '<div class="tarjeta" role="dialog" aria-modal="true" aria-label="Resultado">'
-          + cabeceraTarjeta(q)
+          + cabeceraTarjeta(q) + '<div class="tarjeta-cuerpo">'
           + '<div class="veredicto ' + (res.correcto ? 'bien' : 'mal') + '"><span class="sello">' + A.icono(res.correcto ? 'check' : (res.tiempoAgotado ? 'reloj' : 'cruz'), 60) + '</span><div><h2>' + titulo + '</h2><p>' + sub + '</p></div></div>'
           + '<p class="enunciado largo" id="enunciado" style="margin-top:10px">' + F(q.enunciado) + '</p>'
           + htmlOpciones(q, { elegida: elegida, correcta: res.correctaVista, acierto: res.correcto, revelar: res.abierto })
           + caja
-          + (chips ? '<div class="puntos-fila">' + chips + '</div>' : '')
-          + '<div class="tarjeta-pie"><span class="teclas">' + (res.escapo ? '¡' + esc(eq().nombre) + ' escapó del instituto!' : res.salaCompletada ? '¡Sala completada! La puerta se abre.' : '') + '</span>'
+          + (chips ? '<div class="puntos-fila">' + chips + '</div>' : '') + '</div>'
+          + '<div class="tarjeta-pie"><span class="teclas">' + (res.escapo ? '¡' + esc(eq().nombre) + ' escapó del laboratorio!' : res.salaCompletada ? '¡Sala completada! La puerta se abre.' : '') + '</span>'
           + '<button type="button" class="btn" id="b-seguir">Continuar <kbd>Enter</kbd></button></div></div>';
         $('#b-seguir').focus({ preventScroll: true });
         pintarHud();
@@ -442,7 +516,7 @@
         if (res.abierto) {
           EA.audio.fx('candado');
           if (res.salaCompletada) { EA.audio.fx(res.escapo ? 'victoria' : 'puerta'); espera = CFG.ESPERA_PUERTA_MS; }
-          decir(res.escapo ? '¡Lo lograron! <b>' + esc(eq().nombre) + '</b> escapó del instituto.' : res.salaCompletada ? '¡Sala completada! La puerta se abre…' : 'Candado abierto.', res.correcto || res.salaCompletada ? 'contento' : 'neutral');
+          decir(res.escapo ? '¡Lo lograron! <b>' + esc(eq().nombre) + '</b> escapó del laboratorio.' : res.salaCompletada ? '¡Sala completada! La puerta se abre…' : 'Candado abierto.', res.correcto || res.salaCompletada ? 'contento' : 'neutral');
         } else {
           decir('El candado sigue cerrado. Recuerden la pista para la próxima.', 'neutral');
         }
@@ -461,6 +535,7 @@
         if (b.id === 'b-turno') comenzarTurno();
         else if (b.id === 'b-confirmar') confirmar();
         else if (b.id === 'b-seguir') trasResultado();
+        else if (b.id === 'b-final') irFinal();
         else if (b.hasAttribute('data-op') && !b.disabled) elegir(+b.getAttribute('data-op'));
       });
 
@@ -489,10 +564,10 @@
         ui.pausado = true; // detiene el reloj mientras se decide
         ui.dlg = EA.ui.dialogo({
           titulo: '¿Terminar la partida?',
-          html: '<p>Se mostrará el resumen con los puntajes actuales. Los equipos que no escaparon conservan sus puntos.</p>',
+          html: '<p>Se mostrará el resumen con los puntajes actuales. ' + (solo ? 'El equipo conserva sus puntos.' : 'Los equipos que no escaparon conservan sus puntos.') + '</p>',
           botones: [
             { texto: 'Seguir jugando', clase: 'sec', tecla: 'Escape', accion: reanudar },
-            { texto: 'Terminar y ver resumen', clase: 'peligro', accion: function () { J.terminar(st, ui.usado); irResumen(); } }
+            { texto: 'Terminar y ver resumen', clase: 'peligro', accion: function () { J.terminar(st, ui.usado, 'docente'); irFinal(); } }
           ],
           alCancelar: reanudar
         });
@@ -557,6 +632,7 @@
         },
         tecla: function (e) {
           var k = e.key.toLowerCase();
+          if (st.fase === 'fin') { if (e.key === 'Enter') { e.preventDefault(); irFinal(); } return; }
           if (k === 'p') { pausar(); e.preventDefault(); return; }
           if (ui.pausado) { if (e.key === 'Escape') pausar(false); return; }
           if (st.fase === 'cambio') { if (e.key === 'Enter') { e.preventDefault(); comenzarTurno(); } return; }

@@ -129,11 +129,11 @@
           abrirEdicion(nuevo, true);
         }
         else if (a === 'importar') el.querySelector('#e-archivo').click();
-        else if (a === 'exportar-todos') exportarArchivo(presets, 'presets-apagon-aurora.json');
+        else if (a === 'exportar-todos') exportarArchivo(presets, 'presets-laboratorio.json');
         else if (a === 'restaurar') {
           EA.ui.dialogo({
             titulo: '¿Restaurar los ejemplos?',
-            html: '<p>Se volverán a agregar el preset de ejemplo y la plantilla vacía en su versión original. Sus otros presets no se tocan.</p>',
+            html: '<p>Se volverán a agregar los presets de ejemplo y la plantilla vacía en su versión original. Sus otros presets no se tocan.</p>',
             botones: [{ texto: 'Cancelar', clase: 'sec', tecla: 'Escape' }, { texto: 'Restaurar', accion: function () { presets = EA.almacen.restaurarEjemplos(); st.grado = 'todos'; pintarLista(); EA.ui.anunciar('Ejemplos restaurados'); } }]
           });
         }

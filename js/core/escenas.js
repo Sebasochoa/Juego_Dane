@@ -82,11 +82,11 @@
       id: 'control',
       nombre: 'Sala de Control',
       acento: 'violeta',
-      intro: 'Desde aquí se maneja todo el instituto. Las pantallas funcionan con energía de emergencia.',
+      intro: 'Desde aquí el doctor Ámbar controla todo su laboratorio. Las pantallas funcionan con energía de emergencia.',
       candados: ['Bastidor de servidores', 'Consola principal', 'Caja de llaves', 'Terminal de acceso'],
       puzzle: null,
       examinar: {
-        mapa: { nombre: 'Mapa del instituto', texto: 'El mapa muestra las salas del Instituto Aurora. Las puertas bloqueadas parpadean en rojo.' },
+        mapa: { nombre: 'Mapa del laboratorio', texto: 'El mapa muestra todas las salas del laboratorio del doctor Ámbar. Las puertas bloqueadas parpadean en rojo.' },
         pantalla: { nombre: 'Monitor de energía', texto: 'La gráfica de energía cayó de golpe durante el apagón. El sistema de respaldo mantiene lo esencial.' }
       }
     },

@@ -134,9 +134,9 @@
       s += '<rect class="led" style="animation-delay:' + (i * 0.3) + 's" x="' + (c[0] + c[2] - 9) + '" y="' + (c[1] + c[3] / 2 - 12) + '" width="16" height="24" rx="4" fill="' + V.coral + '"/>';
     });
     s += R(144, 126, 10, 24, 0, V.violetaL, 'opacity=".5"') + R(184, 190, 30, 10, 0, V.violetaL, 'opacity=".5"');
-    s += T(210, 268, 'INSTITUTO AURORA', 17, V.violetaL, MONO + ' letter-spacing="3"');
+    s += T(210, 268, 'LABORATORIO DR. ÁMBAR', 17, V.violetaL, MONO + ' letter-spacing="3"');
     return s;
-  }, 'Pantalla mural: mapa del instituto.');
+  }, 'Pantalla mural: mapa del laboratorio.');
 
   def('ctl.consola', 760, 230, function () {
     var s = E(388, 228, 384, 9, V.sombra);

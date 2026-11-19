@@ -17,6 +17,7 @@
     { id: 'quimica', nombre: 'Química' },
     { id: 'fisica', nombre: 'Física' }
   ];
+  // Identificador interno de los archivos exportados: se conserva para seguir leyendo los ya exportados.
   var FORMATO = 'apagon-aurora-presets';
 
   function texto(v, max) {

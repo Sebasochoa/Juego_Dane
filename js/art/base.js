@@ -97,6 +97,10 @@
     estrella: '#M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9z',
     salida: 'M14 4h5v16h-5|M4 12h10|M10 8l4 4-4 4',
     mochila: 'M7 8h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z|M9 8V6a3 3 0 0 1 6 0v2|M9 14h6',
+    equipos: 'M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6z|M3 20a6 6 0 0 1 12 0|M16 5a3 3 0 0 1 0 6|M18 14.5a6 6 0 0 1 3 5.5',
+    persona: 'M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z|M4 21a8 8 0 0 1 16 0',
+    bateria: 'M4 7h13a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z|M22 10.5v3|#M5 10h3v4H5z',
+    saltar: 'M4 5l7 7-7 7|M13 5l7 7-7 7',
     triangulo: '#M12 3l10 18H2z',
     circulo: '#M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',
     cuadrado: '#M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z',
@@ -186,14 +190,18 @@
     // Cuerpo
     s += R(86, 148, 28, 16, 4, V.metalS) + Vol(52, 160, 96, 64, 26, V.crema, V.cremaS, 6);
     s += C(100, 190, 14, V.turquesaS) + '<circle class="robot-luz" cx="100" cy="190" r="9" fill="' + V.turquesaL + '"/>';
-    // Antena
-    s += L('M100 42 V20', V.metalS, 6) + '<circle class="robot-luz" cx="100" cy="14" r="10" fill="' + V.amarillo + '"/>' + C(97, 11, 3, V.amarilloL);
+    // Antena (apagada si está dormido)
+    s += L('M100 42 V20', V.metalS, 6) + (ex === 'dormido' ? C(100, 14, 10, V.grisS) : '<circle class="robot-luz" cx="100" cy="14" r="10" fill="' + V.amarillo + '"/>' + C(97, 11, 3, V.amarilloL));
     // Cabeza
     s += R(14, 76, 20, 40, 9, V.turquesa) + R(166, 76, 20, 40, 9, V.turquesaS);
     s += Vol(28, 38, 144, 116, 36, V.crema, V.cremaS, 7) + R(44, 46, 60, 8, 4, V.cremaL);
     s += R(46, 58, 108, 76, 24, V.tinta);
     if (ex === 'contento') {
       s += L('M68 96 q11 -16 22 0', cara, 7) + L('M110 96 q11 -16 22 0', cara, 7) + P('M82 106 h36 a18 16 0 0 1 -36 0 z', cara);
+    } else if (ex === 'dormido') {
+      s += L('M68 92 q12 9 24 0', V.grisS, 6) + L('M108 92 q12 9 24 0', V.grisS, 6) + L('M92 116 h16', V.grisS, 5);
+      s += '<g class="robot-zzz" fill="' + V.cremaL + '" font-weight="800">'
+        + '<text x="172" y="40" font-size="30">z</text><text x="192" y="12" font-size="22">z</text></g>';
     } else if (ex === 'pensando') {
       s += C(84, 86, 10, cara) + C(124, 86, 10, cara) + C(87, 83, 4, V.tinta) + C(127, 83, 4, V.tinta) + L('M90 116 h20', cara, 6);
       s += '<g class="robot-puntos">' + C(178, 34, 6, V.cremaL) + C(190, 18, 8, V.cremaL) + '</g>';
@@ -201,7 +209,7 @@
       s += C(80, 92, 11, cara) + C(120, 92, 11, cara) + L('M88 114 q12 9 24 0', cara, 6);
     }
     return s + '</g>';
-  }, 'Asistente robot «Volti». Opciones: expresion (neutral | pensando | contento).');
+  }, 'Asistente robot «Volti». Opciones: expresion (neutral | pensando | contento | dormido).');
 
   // =====================================================================
   //  FONDOS: constructor de sala
