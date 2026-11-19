@@ -5,7 +5,7 @@ const EA = require('./cargar.js');
 const J = EA.juego;
 const CFG = EA.CONFIG;
 
-const preset = () => EA.presets.normalizarPreset(JSON.parse(JSON.stringify(EA.PRESETS_EJEMPLO[0])));
+const preset = () => EA.presets.normalizarPreset(EA.ejemploPorId('ejemplo-ciencias-basicas'));
 const equipos = (n) => Array.from({ length: n }, (_, i) => ({ nombre: 'Equipo ' + (i + 1), color: 'azul', simbolo: 'circulo' }));
 const nueva = (n = 2, opciones = {}, semilla = 123) => J.crearPartida(preset(), equipos(n), opciones, semilla);
 

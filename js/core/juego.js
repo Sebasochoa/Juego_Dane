@@ -1,14 +1,23 @@
 /*
  * Motor de la partida (lógica pura, sin DOM).
  * Fases: 'cambio' -> 'explorar' -> 'pregunta' -> 'resultado' -> 'cambio' ... -> 'fin'
+ *
+ * Modos:
+ *   'turnos' -> de 2 a 4 equipos se alternan; temporizador opcional por turno.
+ *   'solo'   -> un solo equipo juega todo el tiempo; tiempo límite total opcional.
+ *               Cada intento de candado es un «turno» interno (la interfaz no muestra el cambio).
  */
 (function (EA) {
   'use strict';
   var CFG = EA.CONFIG;
   var U = EA.util;
 
+  function limitar(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
   function crearPartida(preset, equiposCfg, opciones, semilla) {
     opciones = opciones || {};
+    var modo = opciones.modo === 'solo' ? 'solo' : 'turnos';
+    if (modo === 'solo') equiposCfg = equiposCfg.slice(0, 1);
     var rng = U.crearRng(semilla == null ? Date.now() : semilla);
     var equipos = equiposCfg.map(function (c, t) {
       return {
@@ -56,12 +65,21 @@
       activo: null,          // índice del candado con pregunta abierta
       escapes: 0,
       numTurno: 1,
-      opciones: { temporizador: opciones.temporizador ? Math.max(CFG.TEMPORIZADOR_MIN, Math.min(CFG.TEMPORIZADOR_MAX, opciones.temporizador)) : 0 },
+      opciones: {
+        modo: modo,
+        // segundos por turno (solo en modo por turnos)
+        temporizador: modo === 'turnos' && opciones.temporizador ? limitar(opciones.temporizador, CFG.TEMPORIZADOR_MIN, CFG.TEMPORIZADOR_MAX) : 0,
+        // segundos totales para escapar (solo en modo un solo equipo)
+        limite: modo === 'solo' && opciones.limite ? limitar(opciones.limite, CFG.LIMITE_MIN * 60, CFG.LIMITE_MAX * 60) : 0
+      },
       fallos: {},            // 'sala:pregunta' -> veces fallada por el grupo
       terminado: false,
-      terminadoPorDocente: false
+      terminadoPorDocente: false,
+      motivoFin: null        // 'escape' (todos escaparon) | 'docente' | 'tiempo'
     };
   }
+
+  function esSolo(st) { return st.opciones.modo === 'solo'; }
 
   function equipoActual(st) { return st.equipos[st.turno]; }
   function salaDe(st, eq) { return eq.escapo ? null : eq.salas[eq.salaIdx]; }
@@ -260,13 +278,19 @@
     }
     st.fase = 'fin';
     st.terminado = true;
+    st.motivoFin = 'escape';
     return { fin: true };
   }
 
-  function terminar(st, segundos) {
+  /**
+   * Termina la partida antes de tiempo.
+   * motivo: 'docente' (botón «Terminar partida») o 'tiempo' (se acabó el tiempo límite).
+   */
+  function terminar(st, segundos, motivo) {
     if (st.fase !== 'fin') {
       if (st.fase !== 'cambio') equipoActual(st).tiempo += Math.max(0, segundos || 0);
-      st.terminadoPorDocente = true;
+      st.motivoFin = motivo === 'tiempo' ? 'tiempo' : 'docente';
+      st.terminadoPorDocente = st.motivoFin === 'docente';
     }
     st.fase = 'fin';
     st.terminado = true;
@@ -277,11 +301,16 @@
 
   function resumen(st) {
     var filas = st.equipos.map(function (eq) {
+      var abiertos = 0, total = 0;
+      eq.salas.forEach(function (s) {
+        s.candados.forEach(function (c) { total++; if (c.estado === 'abierto') abiertos++; });
+      });
       return {
         id: eq.id, nombre: eq.nombre, color: eq.color, simbolo: eq.simbolo,
         puntaje: eq.puntaje, primer: eq.stats.primer, pista: eq.stats.pista, explicacion: eq.stats.explicacion,
         tiempo: Math.round(eq.tiempo), escapo: eq.escapo, ordenEscape: eq.ordenEscape,
-        salasCompletadas: eq.escapo ? eq.salas.length : eq.salaIdx, totalSalas: eq.salas.length
+        salasCompletadas: eq.escapo ? eq.salas.length : eq.salaIdx, totalSalas: eq.salas.length,
+        candadosAbiertos: abiertos, candadosTotales: total
       };
     });
     filas.sort(function (a, b) {
@@ -305,9 +334,12 @@
 
     return {
       preset: st.preset.nombre, equipos: filas, repasar: repasar,
+      modo: st.opciones.modo, limite: st.opciones.limite, motivoFin: st.motivoFin,
       terminadoPorDocente: st.terminadoPorDocente, turnos: st.numTurno
     };
   }
+
+  var TEXTO_MOTIVO = { escape: 'Todos escaparon', docente: 'Terminada por el docente', tiempo: 'Se acabó el tiempo límite' };
 
   function celdaCSV(v) {
     var s = String(v == null ? '' : v);
@@ -319,6 +351,8 @@
   function resultadosCSV(r) {
     var lineas = [];
     lineas.push(['Preset', r.preset].map(celdaCSV).join(','));
+    lineas.push(['Modo', r.modo === 'solo' ? 'Un solo equipo' : 'Por turnos'].map(celdaCSV).join(','));
+    lineas.push(['Fin de la partida', TEXTO_MOTIVO[r.motivoFin] || ''].map(celdaCSV).join(','));
     lineas.push('');
     lineas.push(['Puesto', 'Equipo', 'Puntaje', 'Aciertos al primer intento', 'Aciertos con pista', 'Con explicación', 'Tiempo (s)', 'Salas completadas', 'Escapó', 'Orden de escape'].map(celdaCSV).join(','));
     r.equipos.forEach(function (f) {
@@ -336,7 +370,7 @@
   }
 
   EA.juego = {
-    crearPartida: crearPartida, equipoActual: equipoActual, salaDe: salaDe, escenaDe: escenaDe,
+    crearPartida: crearPartida, esSolo: esSolo, equipoActual: equipoActual, salaDe: salaDe, escenaDe: escenaDe,
     iniciarTurno: iniciarTurno, recoger: recoger, combinar: combinar, usar: usar,
     infoObjeto: infoObjeto, pistaPuzzle: pistaPuzzle,
     puedeIntentar: puedeIntentar, abrirPregunta: abrirPregunta, vistaPregunta: vistaPregunta,

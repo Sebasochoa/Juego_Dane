@@ -3,7 +3,9 @@
   'use strict';
 
   EA.CONFIG = {
-    NOMBRE_JUEGO: 'Apagón en el Aurora',
+    NOMBRE_JUEGO: 'El laboratorio del científico',
+    CIENTIFICO: 'doctor Ámbar',        // personaje de la historia (inventado)
+    CIENTIFICO_FIRMA: 'Dr. Ámbar',
     ESQUEMA_PRESET: 1,
 
     // Puntaje
@@ -29,6 +31,12 @@
     TEMPORIZADOR_MAX: 180,
     TEMPORIZADOR_PASO: 15,
     TEMPORIZADOR_DEFECTO: 90,
+
+    // Modo «un solo equipo»: tiempo límite para escapar (minutos) = energía de respaldo
+    LIMITE_MIN: 5,
+    LIMITE_MAX: 60,
+    LIMITE_PASO: 5,
+    LIMITE_DEFECTO: 20,
 
     // Pausas para ver las animaciones antes del cambio de turno (milisegundos)
     ESPERA_CANDADO_MS: 1500,

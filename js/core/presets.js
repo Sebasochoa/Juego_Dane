@@ -247,6 +247,36 @@
     return p;
   }
 
+  /**
+   * Agrega a la lista guardada los ejemplos que este navegador todavía no conoce.
+   * - vistos: ids de ejemplos ya ofrecidos; si el docente borró uno, no vuelve a aparecer.
+   * - Un ejemplo con «reemplaza» sustituye, en su mismo lugar, al preset guardado con alguno de esos ids.
+   * - Un ejemplo con «defecto» se agrega al principio y se informa para dejarlo elegido.
+   * No modifica los argumentos. Devuelve { lista, vistos, defecto, cambios }.
+   */
+  function migrarEjemplos(lista, vistos, ejemplos) {
+    lista = lista.slice();
+    vistos = vistos.slice();
+    var defecto = null, cambios = 0;
+    ejemplos.forEach(function (crudo) {
+      if (vistos.indexOf(crudo.id) >= 0) return;
+      vistos.push(crudo.id);
+      cambios++;
+      if (lista.some(function (p) { return p.id === crudo.id; })) return; // ya estaba: se respeta tal cual
+      var nuevo = normalizarPreset(JSON.parse(JSON.stringify(crudo)));
+      var reemplaza = Array.isArray(crudo.reemplaza) ? crudo.reemplaza : [];
+      var idx = -1;
+      for (var i = 0; i < lista.length; i++) if (reemplaza.indexOf(lista[i].id) >= 0) { idx = i; break; }
+      var otros = lista.filter(function (p, j) { return j !== idx; }).map(function (p) { return p.nombre; });
+      nuevo.nombre = nombreLibre(nuevo.nombre, otros);
+      if (idx >= 0) lista[idx] = nuevo;
+      else if (crudo.defecto) lista.unshift(nuevo);
+      else lista.push(nuevo);
+      if (crudo.defecto) defecto = nuevo.id;
+    });
+    return { lista: lista, vistos: vistos, defecto: defecto, cambios: cambios };
+  }
+
   function filtrarPorGrado(presets, grado) {
     if (!grado || grado === 'todos') return presets.slice();
     return presets.filter(function (p) { return p.grado === grado; });
@@ -259,6 +289,7 @@
     normalizarPregunta: normalizarPregunta, normalizarPreset: normalizarPreset,
     validarPregunta: validarPregunta, validarPreset: validarPreset,
     nombreLibre: nombreLibre, exportar: exportar, leerImportacion: leerImportacion,
-    fusionar: fusionar, conflictos: conflictos, duplicar: duplicar, filtrarPorGrado: filtrarPorGrado
+    fusionar: fusionar, conflictos: conflictos, duplicar: duplicar, filtrarPorGrado: filtrarPorGrado,
+    migrarEjemplos: migrarEjemplos
   };
 })(typeof window !== 'undefined' ? (window.EA = window.EA || {}) : (globalThis.EA = globalThis.EA || {}));

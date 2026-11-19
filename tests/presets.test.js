@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const EA = require('./cargar.js');
 const P = EA.presets;
 
-const ejemplo = () => P.normalizarPreset(JSON.parse(JSON.stringify(EA.PRESETS_EJEMPLO[0])));
+const ejemplo = () => P.normalizarPreset(EA.ejemploPorId('ejemplo-ciencias-basicas'));
 const pregunta = (extra) => Object.assign({
   enunciado: '¿2 + 2?', alternativas: ['4', '3', '5', '22'], correcta: 0, pista: 'p', explicacion: 'e', rama: '', imagen: ''
 }, extra);
@@ -24,7 +24,7 @@ test('el preset de ejemplo es válido y tiene 3 salas', () => {
 });
 
 test('la plantilla vacía existe y no es jugable todavía', () => {
-  const p = P.normalizarPreset(EA.PRESETS_EJEMPLO[1]);
+  const p = P.normalizarPreset(EA.ejemploPorId('plantilla-vacia'));
   assert.equal(P.validarPreset(p).ok, false);
 });
 
@@ -117,6 +117,41 @@ test('fusionar maneja conflictos de nombre', () => {
   assert.equal(omi.presets.length, 1);
   assert.equal(omi.omitidos, 1);
   assert.notEqual(omi.presets[0].descripcion, 'cambiado');
+});
+
+test('migrarEjemplos: primera vez agrega todos y el predeterminado va primero', () => {
+  const m = P.migrarEjemplos([], [], EA.PRESETS_EJEMPLO);
+  assert.deepEqual(m.lista.map((p) => p.id), ['ejemplo-anhidridos', 'ejemplo-ciencias-basicas', 'plantilla-vacia']);
+  assert.equal(m.defecto, 'ejemplo-anhidridos');
+  assert.deepEqual(m.vistos.slice().sort(), ['ejemplo-anhidridos', 'ejemplo-ciencias-basicas', 'plantilla-vacia']);
+});
+
+test('migrarEjemplos: navegador con presets anteriores recibe el ejemplo nuevo y reemplaza la copia del docente', () => {
+  const copiaDocente = P.normalizarPreset({ id: 'p-mwkv8rqh-1b8iw6', nombre: 'anhídridos u óxidos ácidos', grado: '3', salas: [] });
+  const mio = P.normalizarPreset({ id: 'p-mio', nombre: 'Mi preset', salas: [] });
+  const lista = [ejemplo(), mio, copiaDocente];
+  const copia = JSON.stringify(lista);
+  const m = P.migrarEjemplos(lista, ['ejemplo-ciencias-basicas', 'plantilla-vacia'], EA.PRESETS_EJEMPLO);
+  assert.equal(JSON.stringify(lista), copia, 'no modifica la lista recibida');
+  assert.deepEqual(m.lista.map((p) => p.id), ['ejemplo-ciencias-basicas', 'p-mio', 'ejemplo-anhidridos'], 'reemplaza en el mismo lugar');
+  assert.equal(m.lista[2].nombre, 'Anhídridos u óxidos ácidos', 'sin sufijo: el nombre viejo era de la copia reemplazada');
+  assert.equal(m.lista[2].salas[1].preguntas.length, 7);
+  assert.equal(m.defecto, 'ejemplo-anhidridos');
+  assert.equal(m.cambios, 1);
+  // Si el docente ya había borrado la plantilla, no reaparece.
+  assert.ok(!m.lista.some((p) => p.id === 'plantilla-vacia'));
+});
+
+test('migrarEjemplos: sin ejemplos nuevos no cambia nada; un nombre en conflicto se renombra', () => {
+  const todos = EA.PRESETS_EJEMPLO.map((p) => p.id);
+  const m = P.migrarEjemplos([ejemplo()], todos, EA.PRESETS_EJEMPLO);
+  assert.equal(m.cambios, 0);
+  assert.equal(m.defecto, null);
+  assert.deepEqual(m.lista.map((p) => p.id), ['ejemplo-ciencias-basicas']);
+
+  const otro = P.normalizarPreset({ id: 'p-otro', nombre: 'Anhídridos u óxidos ácidos', salas: [] });
+  const r = P.migrarEjemplos([otro], ['ejemplo-ciencias-basicas', 'plantilla-vacia'], EA.PRESETS_EJEMPLO);
+  assert.deepEqual(r.lista.map((p) => p.nombre), ['Anhídridos u óxidos ácidos (2)', 'Anhídridos u óxidos ácidos']);
 });
 
 test('duplicar y filtrar por grado', () => {
